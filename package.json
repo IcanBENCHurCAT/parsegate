@@ -1,0 +1,55 @@
+{
+  "name": "parsegate",
+  "version": "0.1.0",
+  "description": "x402-native document-to-structured-data API service",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.8",
+    "@hono/swagger-ui": "^0.6.1",
+    "@x402/avm": "^2.19.0",
+    "@x402/core": "^2.19.0",
+    "@x402/extensions": "^2.19.0",
+    "@x402/hono": "^2.19.0",
+    "algosdk": "^3.6.0",
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.7",
+    "epub": "^2.1.0",
+    "exceljs": "^4.4.0",
+    "form-data": "^4.0.1",
+    "hono": "^4.6.14",
+    "mammoth": "^1.8.0",
+    "pdf-parse": "^1.1.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "unified": "^11.0.5",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.2",
+    "@types/supertest": "^7.2.1",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.10"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "x402",
+    "document-parsing",
+    "ocr",
+    "agent-to-agent",
+    "machine-economy"
+  ],
+  "license": "MIT"
+}
