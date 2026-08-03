@@ -1,6 +1,8 @@
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
-import { x402 } from '@x402/hono';
+import { detectFormat } from './detector.js';
+import { normalize } from './normalizer.js';
+import { pricingTable } from './pricing.js';
 
 const app = new Hono();
 
@@ -10,20 +12,49 @@ app.get('/health', (c) => {
 });
 
 // x402 middleware placeholder — configure after testing facilitator integration
-// app.use('/v1/parse*', x402({ /* config */ }));
+// app.use('/v1/parse*', paymentMiddleware({ /* config */ }));
 
 // Parse endpoint (boilerplate — to be implemented)
 app.post('/v1/parse', async (c) => {
   return c.json({ error: 'Not implemented', message: 'Parse endpoint coming soon' }, 501);
 });
 
-// Pricing endpoint (boilerplate)
+// Pricing endpoint — uses pricing engine
 app.get('/v1/pricing', (c) => {
-  return c.json({
-    'per-page': { min: 0.004, max: 0.008, currency: 'USDC' },
-    'per-100kb': { min: 0.002, max: 0.002, currency: 'USDC' },
-    note: 'Prices are per-page for paginated formats, per-100KB for text-based formats'
-  });
+  return c.json(pricingTable);
+});
+
+function isBlob(value: unknown): value is Blob {
+  return value != null && typeof (value as Blob).arrayBuffer === 'function';
+}
+
+// ── Format detection endpoint ───────────────────────────────────
+app.post('/v1/detect', async (c) => {
+  try {
+    const formData = await c.req.parseBody();
+    const file = formData.file;
+
+    if (!isBlob(file)) {
+      return c.json(
+        { error: 'No file provided (expected multipart upload)' },
+        400,
+      );
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    // Hono's FormData exposes file as a File object with .name property
+    const fileName = (file as { name?: string }).name ?? '';
+
+    const triage = detectFormat(buffer, fileName);
+    const doc = normalize(buffer, triage);
+
+    return c.json({ triage, document: doc });
+  } catch (err) {
+    return c.json(
+      { error: 'Detection failed', details: (err as Error).message },
+      500,
+    );
+  }
 });
 
 // Swagger UI (optional, for documentation)
@@ -35,8 +66,9 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
 serve({ fetch: app.fetch, port: PORT }, (info) => {
   console.log(`Parsegate listening on http://localhost:${info.port}`);
   console.log('Routes:');
-  console.log('  GET  /health          — Health check');
-  console.log('  GET  /v1/pricing      — Price table');
-  console.log('  POST /v1/parse        — Parse documents (TBD)');
-  console.log('  GET  /docs            — Swagger UI (optional)');
+  console.log('  GET    /health         — Health check');
+  console.log('  GET    /v1/pricing     — Price table');
+  console.log('  POST   /v1/detect      — Detect file format');
+  console.log('  POST   /v1/parse      — Parse documents (TBD)');
+  console.log('  GET    /docs          — Swagger UI (optional)');
 });
