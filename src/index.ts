@@ -2,8 +2,10 @@ import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import { detectFormat } from './detector.js';
 import { normalize } from './normalizer.js';
+import { ocrPipeline } from './ocr.js';
 import { pricingTable, computePrice, computeSettlement } from './pricing.js';
 import { x402Middleware, buildChallenge, buildTestCredential, validateCredential, type ParseResponse } from './payment.js';
+import { config } from './config.js';
 
 const app = new Hono();
 
@@ -51,7 +53,13 @@ app.post('/v1/parse', async (c) => {
     }
 
     // Step 4: Credential valid → process document
-    const doc = normalize(buffer, triage);
+    // Route scanned PDFs through OCR pipeline; use normalizer for other formats
+    const doc = triage.tier === 'scanned' && triage.needsOCR
+      ? await ocrPipeline(buffer, triage, {
+          apiKey: config.googleCloudVisionApiKey,
+          qwen3BaseUrl: config.qwen3BaseUrl,
+        })
+      : normalize(buffer, triage);
 
     // Step 5: Compute settlement receipt
     // In v0: we eat the loss if actual cost exceeds quoted price
@@ -104,7 +112,13 @@ app.post('/v1/detect', async (c) => {
     const fileName = (file as { name?: string }).name ?? '';
 
     const triage = detectFormat(buffer, fileName);
-    const doc = normalize(buffer, triage);
+    // Route scanned PDFs through OCR pipeline for detection preview
+    const doc = triage.tier === 'scanned' && triage.needsOCR
+      ? await ocrPipeline(buffer, triage, {
+          apiKey: config.googleCloudVisionApiKey,
+          qwen3BaseUrl: config.qwen3BaseUrl,
+        })
+      : normalize(buffer, triage);
 
     return c.json({ triage, document: doc });
   } catch (err) {

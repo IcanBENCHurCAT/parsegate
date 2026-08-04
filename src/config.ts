@@ -10,5 +10,6 @@ export const config = {
   // API keys for processing backends
   qwenApiKey: process.env.QWEN_API_KEY || '',
   googleCloudVisionApiKey: process.env.GOOGLE_CLOUD_VISION_API_KEY || '',
+  qwen3BaseUrl: process.env.QWEN3_BASE_URL || '',
   logLevel: process.env.LOG_LEVEL || 'info',
 };
