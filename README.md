@@ -36,13 +36,13 @@ An x402-native document-to-structured-data API. Agents pay per parse, in stablec
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Copy .env.example and configure
 cp .env.example .env
 
 # Run locally
-npm run dev
+pnpm run dev
 ```
 
 ### API Endpoints
@@ -84,4 +84,4 @@ type Element =
 
 ## 📝 License
 
-MIT
+AGPLv3
