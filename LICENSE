@@ -1,0 +1,216 @@
+Parsegate — Document Parsing API
+Copyright (C) 2025 IcanBENCHurCAT
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+GNU AFFERO GENERAL PUBLIC LICENSE
+                       Version 3, 19 November 2007
+
+ Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+ Everyone is permitted to copy and distribute verbatim copies
+ of this license document, but changing it is not allowed.
+
+                            Preamble
+
+  The GNU Affero General Public License is a free, copyleft license for
+software and other kinds of works, specifically designed to ensure
+cooperation with the community in the case of network server software.
+
+  The licenses for most software and other practical works are designed
+to safeguard and freedom to redistribute it.  That is, you can make
+sure that you have received the source code and that you can also
+modify it and redistribute it.  When you are a network server, the
+copies not only give you the right to redistribute your modified
+version, they also impose the obligation of making the modified
+source code available under the license to all clients of the service.
+
+  The following conditions apply to all modified and distributed versions.
+
+  You may add copyright statements to your modified files and license
+them under this license, but you may not impose restrictions on
+the exercise of the rights granted herein.
+
+  You may not copy, modify, sublicense, or distribute this license
+except in accordance with the terms of this license.
+
+  Terms
+
+  For an developer to modify a work means to copy from or adapt all or
+part of the work in a fashion requiring copyright permission, other
+than making an exact copy of the work already made.
+
+  The "source code" for a work means the preferred form of the work for
+making modifications to it.  "Object code" means any non-source form of a work.
+
+  The "Corresponding Source" for a work in object code form means all
+the source code needed to generate, install, and (for a executable work)
+run the object code and to modify the work, including scripts to control
+those activities.
+
+  The "Contributor" version of a program means a version of it that
+includes Source Code to which the Contributor has made modifications.
+
+  The "Application Server" means a software program running as a
+network server that exposes its functionality over a network.
+
+  Each version is given a distinguishing version number.  If the
+Program specifies that a particular numbered version of the GNU Affero
+General Public License "or any later version" applies to it, you have
+the option of following the terms and conditions either of that
+published version or of any later version published by the Free
+Software Foundation.  If the Program does not specify a version number
+of the GNU Affero General Public License, you may choose any version
+ever published by the Free Software Foundation.
+
+  If the Program specifies that a proxy can decide whether future
+versions of the GNU Affero General Public License can be used, that
+proxy's public statement of acceptance of a version forever
+permits that version for the Program.
+
+  Later license versions may be published by the Free Software
+Foundation, or at the direction of that foundation, by a person
+authorized to distribute it.
+
+  Any attempt to otherwise copy, modify, sublicense or distribute it
+is void, and will automatically terminate your rights under this
+license.
+
+  However, if you cease all violation of this license, then your
+license from a particular copyright holder is reinstated (a)
+provisionally, unless and until the copyright holder explicitly and
+finally terminates your license, and (b) permanently, if the copyright
+holder fails to notify you of the violation by some reasonable means
+prior to 60 days after the cessation.
+
+  Moreover, your license from a particular copyright holder is
+reinstated permanently if the copyright holder notifies you of the
+violation by some reasonable means, this is the first time you have
+received notice of violation of this license (for any work) from that
+copyright holder, and you cure the violation prior to 30 days after
+your receipt of the notice.
+
+  If you have received notice of a claim that the work you've
+contributed infringes a third-party claim, you may delete that
+provision from the work.  This provision also applies if you've
+received a written offer of support from a third-party, and the
+third-party is willing to defend you and indemnify you as a result,
+or if you've incurred a settlement that resolves the matter on
+reasonable terms.
+
+  Each time you redistribute the Program (or any work based on the
+Program), the recipient automatically receives a license from the
+licensor, granting you to the terms of this license.  You may not
+impose any further restrictions on the recipients' exercise of the
+rights granted herein.  You are not responsible for enforcing
+compliance by third parties to this license.
+
+  An "entity transaction" means a transaction that transfers control
+of a business, or other assets, or a subsidiary of a corporation.
+
+  You are not required to accept this license in order to receive or
+run a copy of the Program.  Ancillary propagation of a covered work
+occurring solely as a consequence of using peer-to-peer transmission
+to receive a copy however does not require acceptance.  However,
+nothing other than this license grants you permission to propagate or
+modify any covered work.  These actions infringe copyright if you do
+not accept this license.  You may thus modify or redistribute the
+Program (the covered work) as a result of sections above without
+adopting this license, provided that you keep intact any notices that
+indicate that this license and the additional terms are applied to
+the covered work.
+
+  You are not required to accept this license, since you have not
+signed it.  However, nothing else grants you permission to modify or
+distribute the Program or its derivative works.  These actions are
+prohibited by law if you do not accept this license.  Therefore, by
+modifying or distributing the Program (or any work based on the
+Program), you indicate your acceptance of this license to do so, and
+all its terms and conditions for modifying or distributing the Program
+or works based on it.
+
+  Each time you redistribute the Program (or any work based on the
+Program), the recipient automatically receives a license from the
+licensor, granting you the rights to follow this license.  You may not
+impose any further restrictions on the recipients' exercise of the
+rights granted herein.  You are not responsible for enforcing
+compliance by third parties to this license.
+
+  Terms
+
+  "This License" means the terms and conditions for copying,
+distributing and modifying the Program or works based on it.
+
+  "Source" means the preferred form of the work for making modifications
+to it.
+
+  "Object" means any non-source form of a work.
+
+  "The Program" refers to any copyrightable work licensed under this
+License.  Each licensee is addressed as "you".  "Licensees" and
+"recipients" may be individuals or organizations.
+
+  To "modify" a work means to copy from or adapt all or part of the work
+in a fashion requiring copyright permission, other than making an exact
+copy of the work already made.  The resulting work is called a
+"modified version" of the earlier work or a work "based on" the earlier
+work.
+
+  A "covered work" means either the unmodified Program or a work based on
+the Program.
+
+  To "propagate" a work means to do anything with it that, without
+permission, would make you directly or secondarily liable for
+infringement under applicable copyright law, except executing it on a
+computer or modifying a private copy.  Propagation includes copying,
+distribution (with or without modification), making available to the
+public, and in some countries other activities as well.
+
+  To "convey" a work means any kind of propagation that enables other
+parties to make or receive copies.  Mere interaction with a user through
+a computer network, with no transfer of a copy, is not conveying.
+
+  An interactive user interface displays "Appropriate Legal Notices"
+to the extent that it includes a console that has the following
+characteristics: a) a prominent display of an appropriate copyright
+notice and a statement that the Program is covered by this license; b)
+information on how to view a copy of this License; and c) an advice to
+contact the author or the Free Software Foundation.
+
+  You may not copy, modify, sublicense, or distribute the Program except
+as expressly provided under this License.  Any attempt otherwise to
+copy, modify, sublicense, or distribute the Program is void, and will
+automatically terminate your rights under this License.  However,
+parties who have received copies, or rights, from you under this License
+will not have their licenses terminated so long as such parties remain in
+full compliance.
+
+  You are not required to accept this License, since you have not
+signed it.  However, nothing else grants you permission to modify or
+distribute the Program or its derivative works.  These actions are
+prohibited by law if you do not accept this License.  Therefore, by
+modifying or distributing the Program (or any work based on the
+Program), you indicate your acceptance of this License to do so, and
+all its terms and conditions for modifying or distributing the Program
+or works based on it.
+
+  You may not impose any further restrictions on the exercise of the
+rights granted herein.  You are not responsible for the compliance of
+third parties with this License.
+
+  You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
