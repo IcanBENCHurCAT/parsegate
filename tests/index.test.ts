@@ -8,6 +8,7 @@
  *  - GET /health — health check
  *  - GET /v1/pricing — pricing table from pricing engine
  *  - POST /v1/detect — format detection with normalized output
+ *  - POST /v1/parse — x402 payment challenge/response flow
  *  - Error handling for malformed requests
  */
 
@@ -15,7 +16,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Hono } from 'hono';
 import { detectFormat } from '../src/detector.js';
 import { normalize } from '../src/normalizer.js';
-import { pricingTable } from '../src/pricing.js';
+import { pricingTable, computePrice } from '../src/pricing.js';
+import { x402Middleware, buildTestCredential, buildChallenge, validateCredential } from '../src/payment.js';
+import { computeSettlement } from '../src/pricing.js';
 
 // ── Helper: build a minimal app matching src/index.ts ────────────
 
@@ -53,6 +56,83 @@ function createTestApp(): Hono {
     } catch (err) {
       return c.json(
         { error: 'Detection failed', details: (err as Error).message },
+        500,
+      );
+    }
+  });
+
+  return app;
+}
+
+/**
+ * Helper: build a test app that includes the x402 middleware on /v1/parse.
+ * This mirrors src/index.ts but can be instantiated per-test.
+ */
+function createParseApp(): Hono {
+  const app = new Hono();
+
+  app.get('/health', (c) => {
+    return c.json({ status: 'ok', service: 'parsegate', version: '0.1.0' });
+  });
+
+  app.get('/v1/pricing', (c) => {
+    return c.json(pricingTable);
+  });
+
+  // Apply x402 middleware (global - middleware checks path internally)
+  // NOTE: We use app.use() instead of app.use('/v1/parse*', ...) because
+  // Hono's path-based middleware matching doesn't work in vitest.
+  app.use(x402Middleware());
+
+  app.post('/v1/parse', async (c) => {
+    try {
+      const formData = await c.req.parseBody();
+      const file = formData.file;
+
+      if (!file || typeof file !== 'object' || !('arrayBuffer' in file)) {
+        return c.json(
+          { error: 'No file provided (expected multipart upload)' },
+          400,
+        );
+      }
+
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const fileName = (file as { name?: string }).name ?? '';
+
+      // Step 1: Detect format + triage
+      const triage = detectFormat(buffer, fileName);
+
+      // Step 2: Compute price from triage (deterministic, no silent upcharge)
+      const price = computePrice(triage);
+
+      // Step 3: Check for x402 payment credential
+      const credential = c.req.header('x402-credential');
+
+      if (!credential || !validateCredential(credential, price)) {
+        // No valid credential → return 402 with detailed challenge
+        const challenge = buildChallenge(triage, price);
+        return c.json(challenge, 402);
+      }
+
+      // Step 4: Credential valid → process document
+      const doc = normalize(buffer, triage);
+
+      // Step 5: Compute settlement receipt
+      const receipt = computeSettlement(price, 0);
+
+      // Step 6: Return 200 with parsed result + settlement receipt
+      return c.json({
+        triage,
+        document: doc,
+        payment: {
+          status: 'paid',
+          price,
+          receipt,
+        },
+      }, 200);
+    } catch (err) {
+      return c.json(
+        { error: 'Parse failed', details: (err as Error).message },
         500,
       );
     }
@@ -319,12 +399,11 @@ describe('POST /v1/detect', () => {
       body: fd,
     });
 
-    expect(res.status).toBe(200);
-    const data = await res.json();
-
     // Unknown extension → falls through to content analysis
     // If content is plain text, it will be detected as txt
     // This should not crash
+    expect(res.status).toBe(200);
+    const data = await res.json();
     expect(data.triage.format).toBeDefined();
     expect(data.document).toBeDefined();
     expect(data.document.elements).toBeDefined();
@@ -371,6 +450,306 @@ describe('POST /v1/detect', () => {
     });
 
     expect(res.headers.get('content-type')).toContain('application/json');
+  });
+});
+
+describe('POST /v1/parse — x402 payment flow', () => {
+  let app: Hono;
+
+  beforeEach(() => {
+    app = createParseApp();
+  });
+
+  it('returns 402 when no credential is provided', async () => {
+    const fd = new FormData();
+    fd.append('file', makeBlob('# Hello world', 'readme.md'));
+
+    const res = await app.request('/v1/parse', {
+      method: 'POST',
+      body: fd,
+    });
+
+    expect(res.status).toBe(402);
+    const data = await res.json();
+
+    // Should be a PaymentRequired-style challenge
+    expect(data.x402Version).toBe(1);
+    expect(data.accepts).toBeDefined();
+    expect(Array.isArray(data.accepts)).toBe(true);
+    expect(data.accepts.length).toBeGreaterThan(0);
+    expect(data.accepts[0].amount).toBeDefined();
+    expect(data.accepts[0].scheme).toBe('exact');
+    expect(data.accepts[0].network).toContain('algo:');
+  });
+
+  it('returns 402 with correct triage-based price for markdown', async () => {
+    const fd = new FormData();
+    fd.append('file', makeBlob('# Title\n\nSome content here.', 'doc.md'));
+
+    const res = await app.request('/v1/parse', {
+      method: 'POST',
+      body: fd,
+    });
+
+    expect(res.status).toBe(402);
+    const data = await res.json();
+
+    // The extra field should contain the triage info
+    expect(data.accepts[0].extra.tier).toBe('text');
+    expect(data.accepts[0].extra.format).toBe('md');
+    expect(data.accepts[0].extra.estimatedPages).toBeDefined();
+
+    // Amount should be a valid price string
+    const price = parseFloat(data.accepts[0].amount);
+    expect(price).toBeGreaterThan(0);
+  });
+
+  it('returns 402 with correct triage-based price for structured format (CSV)', async () => {
+    const csv = 'name,age,city\nJohn,30,NYC\nJane,25,LA';
+    const fd = new FormData();
+    fd.append('file', makeBlob(csv, 'data.csv'));
+
+    const res = await app.request('/v1/parse', {
+      method: 'POST',
+      body: fd,
+    });
+
+    expect(res.status).toBe(402);
+    const data = await res.json();
+
+    // CSV should be structured tier
+    expect(data.accepts[0].extra.tier).toBe('structured');
+    expect(data.accepts[0].extra.format).toBe('csv');
+
+    // Structured price should be different from text price
+    const structuredPrice = parseFloat(data.accepts[0].amount);
+    expect(structuredPrice).toBeGreaterThan(0);
+
+    // Verify it matches the expected price from computePrice
+    const triage = detectFormat(Buffer.from(csv), 'data.csv');
+    const expectedPrice = computePrice(triage);
+    expect(structuredPrice).toBe(expectedPrice.amount);
+  });
+
+  it('returns 402 with scanned tier price for PDF', async () => {
+    const fd = new FormData();
+    fd.append('file', makeBlob('%PDF-1.4\nHello world', 'report.pdf'));
+
+    const res = await app.request('/v1/parse', {
+      method: 'POST',
+      body: fd,
+    });
+
+    expect(res.status).toBe(402);
+    const data = await res.json();
+
+    expect(data.accepts[0].extra.tier).toBe('scanned');
+    expect(data.accepts[0].extra.format).toBe('pdf');
+  });
+
+  it('returns 402 for unknown format', async () => {
+    const fd = new FormData();
+    fd.append('file', makeBlob('some content', 'random.xyz'));
+
+    const res = await app.request('/v1/parse', {
+      method: 'POST',
+      body: fd,
+    });
+
+    expect(res.status).toBe(402);
+    const data = await res.json();
+
+    // Unknown formats should use unknown tier pricing
+    expect(data.accepts[0].extra.tier).toBeDefined();
+  });
+
+  it('returns 402 with JSON content type', async () => {
+    const fd = new FormData();
+    fd.append('file', makeBlob('test', 't.txt'));
+
+    const res = await app.request('/v1/parse', {
+      method: 'POST',
+      body: fd,
+    });
+
+    expect(res.status).toBe(402);
+    expect(res.headers.get('content-type')).toContain('application/json');
+  });
+
+  it('returns 402 when invalid credential is provided', async () => {
+    const fd = new FormData();
+    fd.append('file', makeBlob('test', 't.txt'));
+    fd.append('x402-credential', 'invalid_credential_string');
+
+    const res = await app.request('/v1/parse', {
+      method: 'POST',
+      body: fd,
+    });
+
+    // Invalid credential → 402 (middleware returns challenge for non-test_ credentials)
+    expect(res.status).toBe(402);
+    const data = await res.json();
+    expect(data.x402Version).toBe(1);
+  });
+
+  it('returns 200 with valid test credential (full flow)', async () => {
+    const fd = new FormData();
+    fd.append('file', makeBlob('# Hello world', 'readme.md'));
+
+    // Step 1: First call without credential — get the price
+    const res1 = await app.request('/v1/parse', {
+      method: 'POST',
+      body: fd,
+    });
+
+    expect(res1.status).toBe(402);
+    const challenge1 = await res1.json();
+    const quotedPrice = parseFloat(challenge1.accepts[0].amount);
+
+    // Step 2: Build test credential from the quoted price
+    const triage = detectFormat(Buffer.from('# Hello world'), 'readme.md');
+    const price = computePrice(triage);
+    const credential = buildTestCredential(price, triage);
+
+    // Step 3: Retry with valid credential
+    const fd2 = new FormData();
+    fd2.append('file', makeBlob('# Hello world', 'readme.md'));
+
+    const res2 = await app.request('/v1/parse', {
+      method: 'POST',
+      body: fd2,
+      headers: {
+        'x402-credential': credential,
+      },
+    });
+
+    expect(res2.status).toBe(200);
+    const data = await res2.json();
+
+    // Should contain triage, document, and payment info
+    expect(data.triage).toBeDefined();
+    expect(data.triage.format).toBe('md');
+    expect(data.document).toBeDefined();
+    expect(data.document.elements.length).toBeGreaterThan(0);
+    expect(data.payment).toBeDefined();
+    expect(data.payment.status).toBe('paid');
+    expect(data.payment.price).toBeDefined();
+    expect(data.payment.price.amount).toBe(quotedPrice);
+    expect(data.payment.receipt).toBeDefined();
+    expect(data.payment.receipt.quotedPrice).toBe(quotedPrice);
+  });
+
+  it('returns 200 with valid test credential (structured format)', async () => {
+    const csv = 'name,age,city\nJohn,30,NYC\nJane,25,LA';
+    const fd = new FormData();
+    fd.append('file', makeBlob(csv, 'data.csv'));
+
+    // First call — get price
+    const res1 = await app.request('/v1/parse', {
+      method: 'POST',
+      body: fd,
+    });
+    expect(res1.status).toBe(402);
+    const challenge = await res1.json();
+    const quotedPrice = parseFloat(challenge.accepts[0].amount);
+
+    // Build credential
+    const triage = detectFormat(Buffer.from(csv), 'data.csv');
+    const price = computePrice(triage);
+    const credential = buildTestCredential(price, triage);
+
+    // Retry with credential
+    const fd2 = new FormData();
+    fd2.append('file', makeBlob(csv, 'data.csv'));
+
+    const res2 = await app.request('/v1/parse', {
+      method: 'POST',
+      body: fd2,
+      headers: { 'x402-credential': credential },
+    });
+
+    expect(res2.status).toBe(200);
+    const data = await res2.json();
+
+    expect(data.triage.format).toBe('csv');
+    expect(data.triage.tier).toBe('structured');
+    expect(data.payment.status).toBe('paid');
+    expect(data.payment.price.amount).toBe(quotedPrice);
+  });
+
+  it('returns 200 with valid test credential (scanned PDF)', async () => {
+    const fd = new FormData();
+    fd.append('file', makeBlob('%PDF-1.4\nHello world', 'report.pdf'));
+
+    // First call — get price
+    const res1 = await app.request('/v1/parse', {
+      method: 'POST',
+      body: fd,
+    });
+    expect(res1.status).toBe(402);
+    const challenge = await res1.json();
+    const quotedPrice = parseFloat(challenge.accepts[0].amount);
+
+    // Build credential
+    const triage = detectFormat(Buffer.from('%PDF-1.4\nHello world'), 'report.pdf');
+    const price = computePrice(triage);
+    const credential = buildTestCredential(price, triage);
+
+    // Retry with credential
+    const fd2 = new FormData();
+    fd2.append('file', makeBlob('%PDF-1.4\nHello world', 'report.pdf'));
+
+    const res2 = await app.request('/v1/parse', {
+      method: 'POST',
+      body: fd2,
+      headers: { 'x402-credential': credential },
+    });
+
+    expect(res2.status).toBe(200);
+    const data = await res2.json();
+
+    expect(data.triage.format).toBe('pdf');
+    expect(data.triage.tier).toBe('scanned');
+    expect(data.payment.status).toBe('paid');
+    expect(data.payment.price.amount).toBe(quotedPrice);
+  });
+
+  it('pricing endpoint uses pricing table (not hardcoded)', async () => {
+    const fd = new FormData();
+    fd.append('file', makeBlob('test', 't.txt'));
+
+    const app2 = createParseApp();
+    const res = await app2.request('/v1/pricing');
+    expect(res.status).toBe(200);
+    const data = await res.json();
+
+    // Verify the pricing table structure
+    expect(data.tiers).toBeDefined();
+    expect(data.currency).toBe('USDC');
+    expect(data.version).toBeDefined();
+
+    // Verify prices match the pricing table
+    const textPrice = computePrice({
+      format: 'txt',
+      tier: 'text',
+      estimatedPages: 1,
+      needsOCR: false,
+      detectedBy: 'extension',
+    } as any);
+
+    expect(textPrice.amount).toBeGreaterThan(0);
+    expect(textPrice.currency).toBe('USDC');
+  });
+
+  it('returns 400 when no file is provided', async () => {
+    const res = await app.request('/v1/parse', {
+      method: 'POST',
+    });
+
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toBeDefined();
+    expect(data.error).toContain('No file provided');
   });
 });
 
