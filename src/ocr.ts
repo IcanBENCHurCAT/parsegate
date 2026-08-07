@@ -422,7 +422,7 @@ function visionAnnotationsToElements(
     }
 
     // Heuristic: all-caps lines might be section headers
-    if (/^[A-Z0-9\s\-\(\)]{10,}$/.test(trimmed)) {
+    if (/^[A-Z0-9\s-()]{10,}$/.test(trimmed)) {
       elements.push({
         type: 'heading',
         text: trimmed,

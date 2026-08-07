@@ -8,6 +8,7 @@
     "start": "tsx src/index.ts",
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
+    "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -38,7 +39,10 @@
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.2",
     "@types/supertest": "^7.2.1",
+    "@typescript-eslint/eslint-plugin": "^8.66.0",
+    "@typescript-eslint/parser": "^8.66.0",
     "@vitest/coverage-v8": "^4.1.10",
+    "eslint": "^8.57.1",
     "supertest": "^7.2.2",
     "vitest": "^4.1.10"
   },
