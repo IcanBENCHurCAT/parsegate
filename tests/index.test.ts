@@ -735,7 +735,7 @@ describe('POST /v1/parse — x402 payment flow', () => {
       estimatedPages: 1,
       needsOCR: false,
       detectedBy: 'extension',
-    } as any);
+    } as unknown);
 
     expect(textPrice.amount).toBeGreaterThan(0);
     expect(textPrice.currency).toBe('USDC');

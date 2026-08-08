@@ -12,7 +12,6 @@
  */
 
 import axios from 'axios';
-import { detectFormat } from './detector.js';
 import {
   type ParsedDocument,
   type ParsedElement,
@@ -22,7 +21,6 @@ import {
   ImageElement,
   FormulaElement,
   createEmptyDocument,
-  withConfidence,
   defaultConfidenceForTier,
 } from './schema.js';
 import type { TriageResult } from './detector.js';
@@ -302,7 +300,7 @@ function buildQwen3Prompt(ocrText: string, pages: number): string {
 export async function structureWithQwen3(
   ocrText: string,
   config: Partial<OCRConfig> = {},
-  estimatedPages: number = 1,
+  _estimatedPages: number = 1,
 ): Promise<{ elements: Qwen3Element[]; detectedLanguage?: string }> {
   const { qwen3BaseUrl, qwen3Model, qwen3MaxTokens, qwen3Temperature } = {
     ...DEFAULT_CONFIG,
@@ -314,7 +312,7 @@ export async function structureWithQwen3(
     return { elements: [], detectedLanguage: 'en' };
   }
 
-  const prompt = buildQwen3Prompt(ocrText, estimatedPages);
+  const prompt = buildQwen3Prompt(ocrText, _estimatedPages);
 
   try {
     const response = await fetch(`${qwen3BaseUrl}/v1/chat/completions`, {
@@ -392,7 +390,7 @@ export async function structureWithQwen3(
  */
 function visionAnnotationsToElements(
   response: VisionAnnotateResponse,
-  estimatedPages: number,
+  _estimatedPages: number,
 ): ParsedElement[] {
   const elements: ParsedElement[] = [];
   const annotateResponse = response.responses?.[0];

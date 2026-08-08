@@ -15,9 +15,9 @@ import {
   pricingTable,
   computePrice,
   computeSettlement,
-  type TriageResult,
+
   type ComputedPrice,
-  type SettlementReceipt,
+
 } from '../src/pricing.js';
 import type { TriageResult as TriageType } from '../src/detector.js';
 
@@ -77,7 +77,7 @@ describe('Pricing table structure', () => {
   });
 
   it('defines floor prices for all tiers', () => {
-    for (const [tier, config] of Object.entries(pricingTable.tiers)) {
+    for (const [, config] of Object.entries(pricingTable.tiers)) {
       expect(config.floorPrice).toBeGreaterThan(0);
     }
   });

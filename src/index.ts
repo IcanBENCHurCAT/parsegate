@@ -4,7 +4,7 @@ import { detectFormat } from './detector.js';
 import { normalize } from './normalizer.js';
 import { ocrPipeline } from './ocr.js';
 import { pricingTable, computePrice, computeSettlement } from './pricing.js';
-import { x402Middleware, buildChallenge, buildTestCredential, validateCredential, type ParseResponse } from './payment.js';
+import { x402Middleware, buildChallenge, validateCredential, type ParseResponse } from './payment.js';
 import { config } from './config.js';
 import { jobStore, tryWebhook } from './jobs.js';
 import { rateLimiter } from './rate-limit.js';
@@ -109,7 +109,7 @@ app.post('/v1/parse/async', async (c) => {
         return c.json(
           { error: 'Free tier limit exceeded', detail: '3 calls per day per wallet', wallet },
           429,
-          headers as any,
+          headers as unknown as Record<string, string>,
         );
       }
       // Attach rate limit headers to response
@@ -142,7 +142,7 @@ app.post('/v1/parse/async', async (c) => {
     const receipt = computeSettlement(effectivePrice, 0);
 
     // Step 3: Mark job as completed
-    const completedJob = jobStore.complete(job.id, {
+    jobStore.complete(job.id, {
       triage,
       document: doc,
       payment: { status: 'paid', price: effectivePrice, receipt },
