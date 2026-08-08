@@ -14,11 +14,7 @@ import {
   createEmptyDocument,
   defaultConfidenceForTier,
   ParsedDocument,
-  ParsedElement,
-  TableElement,
-  HeadingElement,
-  ParagraphElement,
-} from './schema.js';
+  } from './schema.js';
 import type { TriageResult } from './detector.js';
 
 // ─────────────────────────────────────────────────────────────────
@@ -134,8 +130,7 @@ const normalizeMarkdown: NormalizerFn = (buffer, triage) => {
   // (simplified: detect fenced code blocks and tag them)
   const fullText = text;
   const codeBlockRegex = /```[\s\S]*?```/g;
-  let match: RegExpExecArray | null;
-  while ((match = codeBlockRegex.exec(fullText)) !== null) {
+  while (codeBlockRegex.exec(fullText) !== null) {
     // The code block is embedded in an existing paragraph element;
     // we mark nearby elements with a code-block tag.
     // For now, just add a tag to the element containing the block.

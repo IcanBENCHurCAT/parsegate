@@ -18,7 +18,6 @@ import {
   withConfidence,
 } from '../src/schema.js';
 import type {
-  ParsedDocument,
   ParsedElement,
   HeadingElement,
   ParagraphElement,
@@ -31,9 +30,6 @@ import type { TriageResult } from '../src/detector.js';
 // ─────────────────────────────────────────────────────────────────
 
 /** Create a minimal ZIP-like buffer for format detection. */
-function zipLike(content: string): Buffer {
-  return Buffer.from('PK\x03\x04' + content);
-}
 
 /** Assert that an element is a heading with the expected text and level. */
 function expectHeading(

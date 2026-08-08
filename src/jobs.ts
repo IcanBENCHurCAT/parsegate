@@ -18,9 +18,9 @@ export interface JobError {
 }
 
 export interface JobResult {
-  triage: any;
-  document: any;
-  payment: any;
+  triage: unknown;
+  document: unknown;
+  payment: unknown;
 }
 
 /** A single async parse job. */

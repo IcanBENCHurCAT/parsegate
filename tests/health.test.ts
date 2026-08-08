@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { Hono } from 'hono';
-import { createContent } from 'hono/node-server';
 
 describe('Parsegate Health Check', () => {
   it('should return 200 on /health', async () => {

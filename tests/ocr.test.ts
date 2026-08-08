@@ -19,9 +19,7 @@ import {
   hasTextLayer,
   visionAnnotationsToElements,
   type VisionAnnotateResponse,
-  type Qwen3Response,
-} from '../src/ocr.js';
-import { config } from '../src/config.js';
+  } from '../src/ocr.js';
 import type { TriageResult } from '../src/detector.js';
 
 // ── Mocks ────────────────────────────────────────────────────────
@@ -35,7 +33,7 @@ vi.mock('axios', () => ({
 
 // Mock fetch for Qwen3 API calls
 const originalFetch = global.fetch;
-let mockFetchResponse: { ok: boolean; status: number; json: () => Promise<any> } | null = null;
+let mockFetchResponse: { ok: boolean; status: number; json: () => Promise<unknown> } | null = null;
 
 global.fetch = async (url: RequestInfo | URL, options?: RequestInit) => {
   if (mockFetchResponse) {
@@ -93,7 +91,7 @@ function createMockVisionError(message: string): VisionAnnotateResponse {
 }
 
 /** Set up mock fetch for Qwen3 response. */
-function mockQwen3Response(elements: any[]): void {
+function mockQwen3Response(elements: unknown[]): void {
   const jsonContent = JSON.stringify({
     elements,
     detectedLanguage: 'en',
@@ -118,18 +116,13 @@ function mockQwen3Error(): void {
 }
 
 /** Get the last Qwen3 request body. */
-function getLastQwen3Request(): any {
-  // We can't easily capture this with the current mock setup
-  // but we can verify fetch was called by checking mockFetchResponse
-  return null;
-}
 
 // ── Tests ────────────────────────────────────────────────────────
 
 describe('OCR Pipeline — Google Cloud Vision OCR', () => {
   it('calls GCV API and returns annotations on success', async () => {
     const { default: axios } = await import('axios');
-    const mockAxios = axios as any;
+    const mockAxios = axios as unknown;
     mockAxios.post.mockResolvedValueOnce({
       data: createMockVisionResponse('Hello from scanned PDF.'),
     });
@@ -152,7 +145,7 @@ describe('OCR Pipeline — Google Cloud Vision OCR', () => {
 
   it('returns null when no API key is provided', async () => {
     const { default: axios } = await import('axios');
-    const mockAxios = axios as any;
+    const mockAxios = axios as unknown;
     mockAxios.post.mockRejectedValue(new Error('API key required'));
 
     const result = await ocrDocument(createMockPdf('content'), { apiKey: '' });
@@ -162,7 +155,7 @@ describe('OCR Pipeline — Google Cloud Vision OCR', () => {
 
   it('returns null when GCV API call fails', async () => {
     const { default: axios } = await import('axios');
-    const mockAxios = axios as any;
+    const mockAxios = axios as unknown;
     mockAxios.post.mockRejectedValueOnce(new Error('Network error'));
 
     const result = await ocrDocument(createMockPdf('content'), {
@@ -174,7 +167,7 @@ describe('OCR Pipeline — Google Cloud Vision OCR', () => {
 
   it('returns error response from GCV API', async () => {
     const { default: axios } = await import('axios');
-    const mockAxios = axios as any;
+    const mockAxios = axios as unknown;
     mockAxios.post.mockResolvedValueOnce({
       data: createMockVisionError('Invalid API key'),
     });
@@ -207,7 +200,7 @@ describe('OCR Pipeline — Qwen3 Structuring', () => {
 
     expect(result.elements).toHaveLength(2);
     expect(result.elements[0].type).toBe('heading');
-    expect((result.elements[0] as any).text).toBe('Introduction');
+    expect((result.elements[0] as unknown).text).toBe('Introduction');
     expect(result.detectedLanguage).toBe('en');
   });
 
@@ -280,7 +273,7 @@ describe('OCR Pipeline — End-to-End', () => {
   it('runs full pipeline: Vision OCR → Qwen3 → ParsedDocument', async () => {
     // Mock GCV
     const { default: axios } = await import('axios');
-    const mockAxios = axios as any;
+    const mockAxios = axios as unknown;
     mockAxios.post.mockResolvedValueOnce({
       data: createMockVisionResponse('# Title\n\nBody paragraph.\n\n## Section\n\nMore text.'),
     });
@@ -322,7 +315,7 @@ describe('OCR Pipeline — End-to-End', () => {
   it('falls back to Vision annotations when Qwen3 returns no elements', async () => {
     // Mock GCV
     const { default: axios } = await import('axios');
-    const mockAxios = axios as any;
+    const mockAxios = axios as unknown;
     mockAxios.post.mockResolvedValueOnce({
       data: createMockVisionResponse('# Title\n\nBody text.'),
     });
@@ -352,7 +345,7 @@ describe('OCR Pipeline — End-to-End', () => {
   it('returns empty document when OCR fails completely', async () => {
     // Mock GCV to fail
     const { default: axios } = await import('axios');
-    const mockAxios = axios as any;
+    const mockAxios = axios as unknown;
     mockAxios.post.mockRejectedValueOnce(new Error('API key missing'));
 
     const triage = {
@@ -375,7 +368,7 @@ describe('OCR Pipeline — End-to-End', () => {
   it('handles all element types from Qwen3', async () => {
     // Mock GCV
     const { default: axios } = await import('axios');
-    const mockAxios = axios as any;
+    const mockAxios = axios as unknown;
     mockAxios.post.mockResolvedValueOnce({
       data: createMockVisionResponse('Full OCR text.'),
     });
@@ -433,7 +426,7 @@ describe('OCR Pipeline — End-to-End', () => {
 
   it('sets language metadata when detected by Qwen3', async () => {
     const { default: axios } = await import('axios');
-    const mockAxios = axios as any;
+    const mockAxios = axios as unknown;
     mockAxios.post.mockResolvedValueOnce({
       data: createMockVisionResponse('Text content.'),
     });
@@ -566,7 +559,7 @@ describe('OCR Pipeline — Integration with existing system', () => {
 
     // Mock the external calls
     const { default: axios } = await import('axios');
-    const mockAxios = axios as any;
+    const mockAxios = axios as unknown;
     mockAxios.post.mockResolvedValueOnce({
       data: createMockVisionResponse('# Report\n\nThis is a scanned report.'),
     });
@@ -604,7 +597,7 @@ describe('OCR Pipeline — Integration with existing system', () => {
 describe('OCR Pipeline — Config', () => {
   it('uses default GCV endpoint', async () => {
     const { default: axios } = await import('axios');
-    const mockAxios = axios as any;
+    const mockAxios = axios as unknown;
     mockAxios.post.mockResolvedValueOnce({
       data: createMockVisionResponse('Test.'),
     });
@@ -620,7 +613,7 @@ describe('OCR Pipeline — Config', () => {
 
   it('supports custom GCV endpoint', async () => {
     const { default: axios } = await import('axios');
-    const mockAxios = axios as any;
+    const mockAxios = axios as unknown;
     mockAxios.post.mockResolvedValueOnce({
       data: createMockVisionResponse('Test.'),
     });
@@ -659,7 +652,7 @@ describe('OCR Pipeline — Config', () => {
 describe('OCR Pipeline — Error Handling', () => {
   it('handles Vision API timeout gracefully', async () => {
     const { default: axios } = await import('axios');
-    const mockAxios = axios as any;
+    const mockAxios = axios as unknown;
     mockAxios.post.mockRejectedValueOnce(new Error('Timeout: operation timed out'));
 
     const triage = {
@@ -681,7 +674,7 @@ describe('OCR Pipeline — Error Handling', () => {
 
   it('handles malformed JSON from Qwen3 gracefully', async () => {
     const { default: axios } = await import('axios');
-    const mockAxios = axios as any;
+    const mockAxios = axios as unknown;
     mockAxios.post.mockResolvedValueOnce({
       data: createMockVisionResponse('OCR text.'),
     });

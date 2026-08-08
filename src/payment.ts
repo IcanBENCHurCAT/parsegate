@@ -14,8 +14,6 @@ import { Context } from 'hono';
 import { detectFormat } from './detector.js';
 import { normalize } from './normalizer.js';
 import {
-  computePrice,
-  computeSettlement,
   pricingTable,
   type ComputedPrice,
   type SettlementReceipt,

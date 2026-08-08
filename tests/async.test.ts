@@ -11,7 +11,7 @@
  *  - Error handling (missing file, invalid params, etc.)
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { app } from '../src/index.js';
 import { jobStore } from '../src/jobs.js';
 import { rateLimiter } from '../src/rate-limit.js';
@@ -24,9 +24,7 @@ function makeFilePart(name: string, content: string, fileName: string) {
 }
 
 /** Create a minimal test PDF buffer. */
-function makePdfBuffer(): Buffer {
-  return Buffer.from('%PDF-1.4\nHello world test document');
-}
+
 
 /** Clean up any remaining jobs between tests. */
 function cleanupJobs() {
@@ -49,7 +47,7 @@ describe('POST /v1/parse/async', () => {
   it('returns 400 when no file is provided', async () => {
     const res = await app.request('/v1/parse/async', { method: 'POST' });
     expect(res.status).toBe(400);
-    const body = await res.json() as any;
+    const body = await res.json() as unknown;
     expect(body.error).toBeDefined();
   });
 
@@ -79,7 +77,7 @@ describe('POST /v1/parse/async', () => {
     });
 
     expect(res.status).toBe(200);
-    const body = await res.json() as any;
+    const body = await res.json() as unknown;
     expect(body.jobId).toBeDefined();
     expect(body.status).toBe('completed');
     expect(body.triage).toBeDefined();
@@ -98,7 +96,7 @@ describe('POST /v1/parse/async', () => {
     });
 
     expect(res.status).toBe(200);
-    const body = await res.json() as any;
+    const body = await res.json() as unknown;
     expect(body.jobId).toBeDefined();
     expect(body.status).toBe('completed');
     // Free tier: price should be 0
@@ -134,7 +132,7 @@ describe('POST /v1/parse/async', () => {
     });
 
     expect(res.status).toBe(429);
-    const body = await res.json() as any;
+    const body = await res.json() as unknown;
     expect(body.error).toContain('exceeded');
   });
 
@@ -165,13 +163,13 @@ describe('POST /v1/parse/async', () => {
     });
 
     expect(res.status).toBe(200);
-    const body = await res.json() as any;
+    const body = await res.json() as unknown;
     const jobId = body.jobId;
 
     // Poll the job
     const pollRes = await app.request(`/v1/jobs/${jobId}`);
     expect(pollRes.status).toBe(200);
-    const pollBody = await pollRes.json() as any;
+    const pollBody = await pollRes.json() as unknown;
     expect(pollBody.jobId).toBe(jobId);
     expect(pollBody.status).toBe('completed');
     expect(pollBody.result).toBeDefined();
@@ -180,7 +178,7 @@ describe('POST /v1/parse/async', () => {
   it('returns 404 for non-existent job', async () => {
     const res = await app.request('/v1/jobs/non-existent-job-id');
     expect(res.status).toBe(404);
-    const body = await res.json() as any;
+    const body = await res.json() as unknown;
     expect(body.error).toBe('Job not found');
   });
 
@@ -199,7 +197,7 @@ describe('POST /v1/parse/async', () => {
     // Check stats
     const res = await app.request('/v1/jobs/stats');
     expect(res.status).toBe(200);
-    const stats = await res.json() as any;
+    const stats = await res.json() as unknown;
     expect(stats.total).toBeGreaterThanOrEqual(1);
     expect(stats.completed).toBeGreaterThanOrEqual(1);
     expect(stats.pending).toBe(0);
@@ -213,7 +211,7 @@ describe('GET /v1/plan', () => {
   it('returns full service discovery document', async () => {
     const res = await app.request('/v1/plan');
     expect(res.status).toBe(200);
-    const body = await res.json() as any;
+    const body = await res.json() as unknown;
 
     expect(body.service).toBe('parsegate');
     expect(body.version).toBe('0.1.0');
@@ -225,7 +223,7 @@ describe('GET /v1/plan', () => {
 
   it('documents all endpoints', async () => {
     const res = await app.request('/v1/plan');
-    const body = await res.json() as any;
+    const body = await res.json() as unknown;
 
     expect(body.endpoints['/v1/parse']).toBeDefined();
     expect(body.endpoints['/v1/parse/async']).toBeDefined();
@@ -236,7 +234,7 @@ describe('GET /v1/plan', () => {
 
   it('documents free tier limits', async () => {
     const res = await app.request('/v1/plan');
-    const body = await res.json() as any;
+    const body = await res.json() as unknown;
 
     expect(body.freeTier.callsPerDay).toBe(3);
     expect(body.freeTier.per).toBe('wallet-address');
@@ -245,7 +243,7 @@ describe('GET /v1/plan', () => {
 
   it('documents supported formats and element types', async () => {
     const res = await app.request('/v1/plan');
-    const body = await res.json() as any;
+    const body = await res.json() as unknown;
 
     expect(body.formats.text).toContain('txt');
     expect(body.formats.text).toContain('md');

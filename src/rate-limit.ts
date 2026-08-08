@@ -98,7 +98,7 @@ class FreeTierRateLimiter {
   cleanup(): number {
     const todayStr = this.today();
     let cleaned = 0;
-    for (const [key, entry] of this.entries.entries()) {
+    for (const [key] of this.entries.entries()) {
       // Parse date from key (wallet:YYYY-MM-DD)
       const datePart = key.split(':').pop();
       if (!datePart) continue;

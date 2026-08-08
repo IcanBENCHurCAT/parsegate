@@ -112,7 +112,7 @@ export function computePrice(triage: TriageResult): ComputedPrice {
 
   if (triage.tier === 'text') {
     // Text: per-100KB rate
-    const sizeKB = (triage.estimatedPages * 3) * 1024; // rough estimate: 3KB/page → convert back
+     // rough estimate: 3KB/page → convert back
     // Actually, we don't have raw file size in TriageResult. Use perPage as proxy.
     // For text formats, estimate: ~3KB/page. So per100KB ≈ perPage / 33.3
     // But the pricing table already encodes this. Use perPage × pages with text rate.
