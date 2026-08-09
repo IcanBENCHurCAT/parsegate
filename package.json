@@ -2,7 +2,8 @@
   "name": "parsegate",
   "version": "0.1.0",
   "description": "x402-native document-to-structured-data API service",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
     "start": "tsx src/index.ts",

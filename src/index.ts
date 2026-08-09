@@ -339,3 +339,9 @@ if (import.meta.url.endsWith(process.argv[1] || '')) {
 
 // Export for testing
 export { app };
+
+// Export types for SDK consumers
+export type { ParseResponse, PaymentChallenge, ParsedCredential, PaymentRequirement } from './payment.js';
+export type { ParsedDocument, ParsedElement, ParagraphElement, HeadingElement, TableElement, ImageElement, FormulaElement, ElementBase, LocationInfo } from './schema.js';
+export type { ComputedPrice, SettlementReceipt, PriceTier, PricingTable } from './pricing.js';
+export type { TriageResult } from './detector.js';
