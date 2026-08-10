@@ -34,6 +34,10 @@ app.post('/v1/parse', async (c) => {
       return c.json({ error: 'No file provided (expected multipart upload)' }, 400);
     }
 
+    if (file.size > config.maxFileSize) {
+      return c.json({ error: `File too large (exceeds ${config.maxFileSize} bytes)` }, 413);
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
     const fileName = (file as { name?: string }).name ?? '';
 
@@ -84,6 +88,10 @@ app.post('/v1/parse/async', async (c) => {
 
     if (!isBlob(file)) {
       return c.json({ error: 'No file provided (expected multipart upload)' }, 400);
+    }
+
+    if (file.size > config.maxFileSize) {
+      return c.json({ error: `File too large (exceeds ${config.maxFileSize} bytes)` }, 413);
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -293,6 +301,10 @@ app.post('/v1/detect', async (c) => {
 
     if (!isBlob(file)) {
       return c.json({ error: 'No file provided (expected multipart upload)' }, 400);
+    }
+
+    if (file.size > config.maxFileSize) {
+      return c.json({ error: `File too large (exceeds ${config.maxFileSize} bytes)` }, 413);
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
