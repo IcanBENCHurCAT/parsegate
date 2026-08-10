@@ -36,6 +36,13 @@ const FORMAT_EXTENSIONS: Record<string, string[]> = {
   rtf:  ['rtf'],
 };
 
+const EXTENSION_TO_FORMAT_MAP = new Map<string, string>();
+for (const [format, extensions] of Object.entries(FORMAT_EXTENSIONS)) {
+  for (const ext of extensions) {
+    EXTENSION_TO_FORMAT_MAP.set(ext, format);
+  }
+}
+
 // ── Magic-byte signatures ─────────────────────────────────────────
 
 const PDF_HEADER = '%PDF-';
@@ -57,11 +64,7 @@ function detectMagic(buffer: Buffer): string | null {
 // ── Helpers ───────────────────────────────────────────────────────
 
 function extensionToFormat(ext: string): string | null {
-  const extLower = ext.toLowerCase();
-  for (const [format, extensions] of Object.entries(FORMAT_EXTENSIONS)) {
-    if (extensions.includes(extLower)) return format;
-  }
-  return null;
+  return EXTENSION_TO_FORMAT_MAP.get(ext.toLowerCase()) || null;
 }
 
 function getTier(format: string): 'text' | 'structured' | 'scanned' | 'unknown' {
@@ -164,16 +167,15 @@ export function detectFormat(
   if (magic === 'zip') {
     if (fileName) {
       const ext = fileName.split('.').pop()?.toLowerCase() || '';
-      for (const [format, extensions] of Object.entries(FORMAT_EXTENSIONS)) {
-        if (extensions.includes(ext)) {
-          return {
-            format,
-            tier: getTier(format),
-            estimatedPages: estimatePages(buffer, format),
-            needsOCR: false,
-            detectedBy: 'magic-byte',
-          };
-        }
+      const format = extensionToFormat(ext);
+      if (format) {
+        return {
+          format,
+          tier: getTier(format),
+          estimatedPages: estimatePages(buffer, format),
+          needsOCR: false,
+          detectedBy: 'magic-byte',
+        };
       }
     }
   }
