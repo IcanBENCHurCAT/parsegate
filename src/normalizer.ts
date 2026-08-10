@@ -319,9 +319,3 @@ export function registerNormalizer(
   NORMALIZERS[format.toLowerCase()] = normalizer;
 }
 
-/**
- * Return the list of currently registered format keys.
- */
-export function registeredFormats(): string[] {
-  return Object.keys(NORMALIZERS);
-}
