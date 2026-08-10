@@ -13,4 +13,6 @@ export const config = {
   googleCloudVisionApiKey: process.env.GOOGLE_CLOUD_VISION_API_KEY || '',
   qwen3BaseUrl: process.env.QWEN3_BASE_URL || '',
   logLevel: process.env.LOG_LEVEL || 'info',
+  // Maximum file upload size (default: 50MB)
+  maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '52428800', 10),
 };
