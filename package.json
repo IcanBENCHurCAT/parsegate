@@ -57,5 +57,13 @@
     "agent-to-agent",
     "machine-economy"
   ],
-  "license": "AGPL-3.0"
+  "license": "AGPL-3.0",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  }
 }
