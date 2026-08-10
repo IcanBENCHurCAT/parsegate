@@ -309,17 +309,6 @@ export function normalize(
 }
 
 /**
- * Register a custom normalizer for a format.
- * Useful for extending the normalizer with third-party parsers.
- */
-export function registerNormalizer(
-  format: string,
-  normalizer: NormalizerFn,
-): void {
-  NORMALIZERS[format.toLowerCase()] = normalizer;
-}
-
-/**
  * Return the list of currently registered format keys.
  */
 export function registeredFormats(): string[] {
