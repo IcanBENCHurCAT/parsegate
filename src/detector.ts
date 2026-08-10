@@ -56,12 +56,16 @@ function detectMagic(buffer: Buffer): string | null {
 
 // ── Helpers ───────────────────────────────────────────────────────
 
+const EXT_MAP = new Map<string, string>();
+for (const [format, extensions] of Object.entries(FORMAT_EXTENSIONS)) {
+  for (const ext of extensions) {
+    EXT_MAP.set(ext, format);
+  }
+}
+
 function extensionToFormat(ext: string): string | null {
   const extLower = ext.toLowerCase();
-  for (const [format, extensions] of Object.entries(FORMAT_EXTENSIONS)) {
-    if (extensions.includes(extLower)) return format;
-  }
-  return null;
+  return EXT_MAP.get(extLower) || null;
 }
 
 function getTier(format: string): 'text' | 'structured' | 'scanned' | 'unknown' {
@@ -164,16 +168,15 @@ export function detectFormat(
   if (magic === 'zip') {
     if (fileName) {
       const ext = fileName.split('.').pop()?.toLowerCase() || '';
-      for (const [format, extensions] of Object.entries(FORMAT_EXTENSIONS)) {
-        if (extensions.includes(ext)) {
-          return {
-            format,
-            tier: getTier(format),
-            estimatedPages: estimatePages(buffer, format),
-            needsOCR: false,
-            detectedBy: 'magic-byte',
-          };
-        }
+      const format = extensionToFormat(ext);
+      if (format) {
+        return {
+          format,
+          tier: getTier(format),
+          estimatedPages: estimatePages(buffer, format),
+          needsOCR: false,
+          detectedBy: 'magic-byte',
+        };
       }
     }
   }
