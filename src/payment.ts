@@ -11,6 +11,7 @@
  */
 
 import { Context } from 'hono';
+import { config } from './config.js';
 import { detectFormat } from './detector.js';
 import { normalize } from './normalizer.js';
 import {
@@ -69,7 +70,7 @@ export interface ParseResponse {
 // Test-mode credential helpers
 // ─────────────────────────────────────────────────────────────────
 
-const TEST_SECRET = 'parsegate-x402-secret';
+const TEST_SECRET = config.x402TestSecret;
 
 /**
  * Build a test-mode credential string.
