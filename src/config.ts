@@ -7,6 +7,7 @@ export const config = {
   avmPayToAddress: process.env.AVM_PAY_TO_ADDRESS || '',
   // Whether to require real x402 payments (false for dev/test)
   x402TestMode: process.env.X402_TEST_MODE === 'true',
+  x402TestSecret: process.env.X402_TEST_SECRET || '',
   // API keys for processing backends
   qwenApiKey: process.env.QWEN_API_KEY || '',
   googleCloudVisionApiKey: process.env.GOOGLE_CLOUD_VISION_API_KEY || '',
