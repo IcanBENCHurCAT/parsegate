@@ -65,5 +65,9 @@
         "default": "./dist/index.js"
       }
     }
-  }
+  },
+  "files": [
+    "dist",
+    "src"
+  ]
 }

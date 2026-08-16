@@ -337,3 +337,5 @@ export type { ParseResponse, PaymentChallenge, ParsedCredential, PaymentRequirem
 export type { ParsedDocument, ParsedElement, ParagraphElement, HeadingElement, TableElement, ImageElement, FormulaElement, ElementBase, LocationInfo } from './schema.js';
 export type { ComputedPrice, SettlementReceipt, PriceTier, PricingTable } from './pricing.js';
 export type { TriageResult } from './detector.js';
+export type { AsyncJob, JobStatus, JobError, JobResult } from './jobs.js';
+export type { RateLimitEntry } from './rate-limit.js';
