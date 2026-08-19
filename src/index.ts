@@ -333,8 +333,8 @@ function isBlob(value: unknown): value is Blob {
 export { app };
 
 // Export types for SDK consumers
-export type { ParseResponse, PaymentChallenge, ParsedCredential, PaymentRequirement } from './payment.js';
-export type { ParsedDocument, ParsedElement, ParagraphElement, HeadingElement, TableElement, ImageElement, FormulaElement, ElementBase, LocationInfo } from './schema.js';
+export type { ParseResponse, PaymentChallenge, ParsedCredential, PaymentRequirement, PaymentPayload, PaymentRequirements, RouteConfig, RoutesConfig } from './payment.js';
+export type { ParsedDocument, ParsedElement, ParagraphElement, HeadingElement, TableElement, ImageElement, FormulaElement, ElementBase, LocationInfo, ElementType } from './schema.js';
 export type { ComputedPrice, SettlementReceipt, PriceTier, PricingTable } from './pricing.js';
 export type { TriageResult } from './detector.js';
 export type { AsyncJob, JobStatus, JobError, JobResult } from './jobs.js';
