@@ -91,4 +91,33 @@ ipfs-pay-to-pin/
 | `SUPABASE_KEY` | Supabase anon or service-role API key |
 
 ---
+
+## 6. Client Methods & Edge Cases
+
+The following client methods must be implemented by agents consuming the IPFS Pay-to-Pin Gateway. Robust error handling is critical due to the decentralized storage and micropayment architecture.
+
+### `pinFile(file: Buffer | Blob, filename: string): Promise<PinResponse>`
+Initiates a new file upload and storage request.
+- **Flow**: Submits file payload -> Receives `402 Payment Required` with challenge -> Pays challenge -> Resubmits with payment signature.
+- **Edge Cases & Error Handling**:
+  - `503 Service Unavailable`: The local buffer queue is full. Agents MUST NOT attempt payment or assume the file is pinned. Implement exponential backoff.
+  - `402 Payment Required`: This is expected on the first request. Failure to handle the payment challenge correctly will prevent pinning.
+  - `413 Payload Too Large`: The file exceeds the maximum allowed size.
+  - `401 Unauthorized`: Payment signature is invalid or transaction was not confirmed on-chain.
+
+### `renewPin(cid: string): Promise<RenewResponse>`
+Extends the retention period of an existing pin (up to 365 days per payment).
+- **Flow**: Submits CID for renewal -> Receives `402 Payment Required` challenge -> Pays challenge -> Resubmits with payment signature.
+- **Edge Cases & Error Handling**:
+  - **Early Renewal Discount**: Payments processed prior to expiration automatically receive a 50% discount in the generated x402 challenge.
+  - `404 Not Found`: The requested CID is not known to the gateway or was previously unpinned/garbage collected.
+  - `400 Bad Request`: The provided CID is malformed or invalid.
+
+### `getPinStatus(cid: string): Promise<PinStatus>`
+Retrieves the current status, expiration date, and payment history of a pinned CID.
+- **Edge Cases & Error Handling**:
+  - `404 Not Found`: The CID is not tracked by this gateway.
+  - **Buffer Status**: The response should indicate whether the pin is currently held in the local buffer or successfully propagated to the upstream IPFS network (Pinata).
+
+---
 *Keep this document updated as the project evolves.*
