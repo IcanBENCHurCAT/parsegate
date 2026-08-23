@@ -12,134 +12,19 @@
  *  - Error handling for malformed requests
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { Hono } from 'hono';
+import { describe, it, expect } from 'vitest';
+import { app } from '../src/index.js';
+import { computePrice } from '../src/pricing.js';
 import { detectFormat } from '../src/detector.js';
-import { normalize } from '../src/normalizer.js';
-import { pricingTable, computePrice } from '../src/pricing.js';
-import { x402Middleware, buildTestCredential, buildChallenge, validateCredential } from '../src/payment.js';
-import { computeSettlement } from '../src/pricing.js';
+import { buildTestCredential } from '../src/payment.js';
 
 // ── Helper: build a minimal app matching src/index.ts ────────────
 
-function createTestApp(): Hono {
-  const app = new Hono();
-
-  app.get('/health', (c) => {
-    return c.json({ status: 'ok', service: 'parsegate', version: '0.1.0' });
-  });
-
-  app.get('/v1/pricing', (c) => {
-    return c.json(pricingTable);
-  });
-
-  app.post('/v1/detect', async (c) => {
-    try {
-      const formData = await c.req.parseBody();
-      const file = formData.file;
-
-      if (!file || typeof file !== 'object' || !('arrayBuffer' in file)) {
-        return c.json(
-          { error: 'No file provided (expected multipart upload)' },
-          400,
-        );
-      }
-
-      const buffer = Buffer.from(await file.arrayBuffer());
-      // Hono's FormData exposes file as a File object with .name property
-      const fileName = (file as { name?: string }).name ?? '';
-
-      const triage = detectFormat(buffer, fileName);
-      const doc = normalize(buffer, triage);
-
-      return c.json({ triage, document: doc });
-    } catch (err) {
-      return c.json(
-        { error: 'Detection failed', details: (err as Error).message },
-        500,
-      );
-    }
-  });
-
-  return app;
-}
 
 /**
  * Helper: build a test app that includes the x402 middleware on /v1/parse.
  * This mirrors src/index.ts but can be instantiated per-test.
  */
-function createParseApp(): Hono {
-  const app = new Hono();
-
-  app.get('/health', (c) => {
-    return c.json({ status: 'ok', service: 'parsegate', version: '0.1.0' });
-  });
-
-  app.get('/v1/pricing', (c) => {
-    return c.json(pricingTable);
-  });
-
-  // Apply x402 middleware (global - middleware checks path internally)
-  // NOTE: We use app.use() instead of app.use('/v1/parse*', ...) because
-  // Hono's path-based middleware matching doesn't work in vitest.
-  app.use(x402Middleware());
-
-  app.post('/v1/parse', async (c) => {
-    try {
-      const formData = await c.req.parseBody();
-      const file = formData.file;
-
-      if (!file || typeof file !== 'object' || !('arrayBuffer' in file)) {
-        return c.json(
-          { error: 'No file provided (expected multipart upload)' },
-          400,
-        );
-      }
-
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const fileName = (file as { name?: string }).name ?? '';
-
-      // Step 1: Detect format + triage
-      const triage = detectFormat(buffer, fileName);
-
-      // Step 2: Compute price from triage (deterministic, no silent upcharge)
-      const price = computePrice(triage);
-
-      // Step 3: Check for x402 payment credential
-      const credential = c.req.header('x402-credential');
-
-      if (!credential || !validateCredential(credential, price)) {
-        // No valid credential → return 402 with detailed challenge
-        const challenge = buildChallenge(triage, price);
-        return c.json(challenge, 402);
-      }
-
-      // Step 4: Credential valid → process document
-      const doc = normalize(buffer, triage);
-
-      // Step 5: Compute settlement receipt
-      const receipt = computeSettlement(price, 0);
-
-      // Step 6: Return 200 with parsed result + settlement receipt
-      return c.json({
-        triage,
-        document: doc,
-        payment: {
-          status: 'paid',
-          price,
-          receipt,
-        },
-      }, 200);
-    } catch (err) {
-      return c.json(
-        { error: 'Parse failed', details: (err as Error).message },
-        500,
-      );
-    }
-  });
-
-  return app;
-}
 
 // ── Helpers ──────────────────────────────────────────────────────
 
@@ -161,11 +46,6 @@ function zipLike(content: string, filename: string): Blob {
 // ── Tests ─────────────────────────────────────────────────────────
 
 describe('GET /health', () => {
-  let app: Hono;
-
-  beforeEach(() => {
-    app = createTestApp();
-  });
 
   it('returns 200 with status ok', async () => {
     const res = await app.request('/health');
@@ -184,11 +64,6 @@ describe('GET /health', () => {
 });
 
 describe('GET /v1/pricing', () => {
-  let app: Hono;
-
-  beforeEach(() => {
-    app = createTestApp();
-  });
 
   it('returns 200 with pricing table', async () => {
     const res = await app.request('/v1/pricing');
@@ -218,11 +93,6 @@ describe('GET /v1/pricing', () => {
 });
 
 describe('POST /v1/detect', () => {
-  let app: Hono;
-
-  beforeEach(() => {
-    app = createTestApp();
-  });
 
   it('returns 400 when no file is provided', async () => {
     const res = await app.request('/v1/detect', {
@@ -454,11 +324,6 @@ describe('POST /v1/detect', () => {
 });
 
 describe('POST /v1/parse — x402 payment flow', () => {
-  let app: Hono;
-
-  beforeEach(() => {
-    app = createParseApp();
-  });
 
   it('returns 402 when no credential is provided', async () => {
     const fd = new FormData();
@@ -718,8 +583,8 @@ describe('POST /v1/parse — x402 payment flow', () => {
     const fd = new FormData();
     fd.append('file', makeBlob('test', 't.txt'));
 
-    const app2 = createParseApp();
-    const res = await app2.request('/v1/pricing');
+
+    const res = await app.request('/v1/pricing');
     expect(res.status).toBe(200);
     const data = await res.json();
 
@@ -754,11 +619,6 @@ describe('POST /v1/parse — x402 payment flow', () => {
 });
 
 describe('Error handling', () => {
-  let app: Hono;
-
-  beforeEach(() => {
-    app = createTestApp();
-  });
 
   it('does not crash on large binary blob', async () => {
     const fd = new FormData();
