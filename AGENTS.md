@@ -110,13 +110,17 @@ Extends the retention period of an existing pin (up to 365 days per payment).
 - **Flow**: Submits CID for renewal -> Receives `402 Payment Required` challenge -> Pays challenge -> Resubmits with payment signature.
 - **Edge Cases & Error Handling**:
   - **Early Renewal Discount**: Payments processed prior to expiration automatically receive a 50% discount in the generated x402 challenge.
+  - `503 Service Unavailable`: The local buffer queue is full. Agents MUST NOT attempt payment or assume the renewal is processed. Implement exponential backoff.
   - `404 Not Found`: The requested CID is not known to the gateway or was previously unpinned/garbage collected.
+  - `402 Payment Required`: This is expected on the first request. Failure to handle the payment challenge correctly will prevent renewal.
+  - `401 Unauthorized`: Payment signature is invalid or transaction was not confirmed on-chain.
   - `400 Bad Request`: The provided CID is malformed or invalid.
 
 ### `getPinStatus(cid: string): Promise<PinStatus>`
 Retrieves the current status, expiration date, and payment history of a pinned CID.
 - **Edge Cases & Error Handling**:
   - `404 Not Found`: The CID is not tracked by this gateway.
+  - `400 Bad Request`: The provided CID is malformed or invalid.
   - **Buffer Status**: The response should indicate whether the pin is currently held in the local buffer or successfully propagated to the upstream IPFS network (Pinata).
 
 ---
