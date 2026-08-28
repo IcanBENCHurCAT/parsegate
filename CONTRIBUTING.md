@@ -1,6 +1,6 @@
-# Contributing to IPFS "Pay-to-Pin" Gateway
+# Contributing to Parsegate
 
-First off, thank you for considering contributing to the IPFS "Pay-to-Pin" Gateway! It's people like you that make open source such a great community.
+First off, thank you for considering contributing to Parsegate! It's people like you that make open source such a great community.
 
 ## 🤝 For Human Contributors
 

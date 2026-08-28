@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest an idea for the IPFS Pay-to-Pin Gateway
+about: Suggest an idea for Parsegate
 title: "[FEATURE] "
 labels: enhancement
 assignees: ''
