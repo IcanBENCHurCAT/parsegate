@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Create a report to help us improve the IPFS Pay-to-Pin Gateway
+about: Create a report to help us improve Parsegate
 title: "[BUG] "
 labels: bug
 assignees: ''
