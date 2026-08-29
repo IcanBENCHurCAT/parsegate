@@ -27,8 +27,8 @@ importers:
         specifier: ^2.23.0
         version: 2.23.0(hono@4.13.0)(typescript@5.9.3)
       algosdk:
-        specifier: ^3.6.0
-        version: 3.6.0
+        specifier: ^3.7.0
+        version: 3.7.0
       axios:
         specifier: ^1.7.9
         version: 1.19.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
@@ -763,8 +763,8 @@ packages:
     resolution: {integrity: sha512-08k7pBQnkaUB5p+jL7f1TRaUIlTSDE0cesFu1mD7llLao+1cAhtvvZmGE3OnisTd0xOn118QMw74SRqddqaYvw==}
     engines: {node: '>= 14'}
 
-  algosdk@3.6.0:
-    resolution: {integrity: sha512-pdM0neCgR3DasvpSPfgQKc5/hlhkSYmXjcUChePLGegA0kqA0AoLmcfMDyeREcsvHcu7rrv3Wa+RZnGa5kINwQ==}
+  algosdk@3.7.0:
+    resolution: {integrity: sha512-6mr5w+A+A87/rAd4Y5hSmKSfvLkOKeik81w8Tte9ZxSqnwqUuWUioQsJail3ZyCbJtEctJXJTxe7Sx50/lQi3g==}
     engines: {node: '>=18.0.0'}
 
   ansi-regex@5.0.1:
@@ -2778,7 +2778,7 @@ snapshots:
 
   algorand-msgpack@1.1.0: {}
 
-  algosdk@3.6.0:
+  algosdk@3.7.0:
     dependencies:
       algorand-msgpack: 1.1.0
       hi-base32: 0.5.1
