@@ -41,7 +41,7 @@
     "@types/node": "^22.10.2",
     "@types/supertest": "^7.2.1",
     "@typescript-eslint/eslint-plugin": "^8.66.0",
-    "@typescript-eslint/parser": "^8.66.0",
+    "@typescript-eslint/parser": "^8.68.0",
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^8.57.1",
     "supertest": "^7.2.2",
