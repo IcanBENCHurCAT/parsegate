@@ -2,6 +2,14 @@
   "name": "parsegate",
   "version": "0.1.0",
   "description": "x402-native document-to-structured-data API service",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IcanBENCHurCAT/parsegate.git"
+  },
+  "bugs": {
+    "url": "https://github.com/IcanBENCHurCAT/parsegate/issues"
+  },
+  "homepage": "https://github.com/IcanBENCHurCAT/parsegate#readme",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -57,6 +65,7 @@
     "agent-to-agent",
     "machine-economy"
   ],
+  "author": "Parsegate Contributors",
   "license": "AGPL-3.0",
   "exports": {
     ".": {
