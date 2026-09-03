@@ -1,0 +1,28 @@
+# Add 'bug' label to any changes within 'src' or 'tests' directories if the PR title contains 'fix'
+bug:
+  - all:
+    - changed-files:
+      - any-glob-to-any-file: ['src/**/*', 'tests/**/*']
+    - head-branch: ['^fix', '^bug']
+
+# Add 'enhancement' label to any changes within 'src' or 'tests' directories if the PR title contains 'feat'
+enhancement:
+  - all:
+    - changed-files:
+      - any-glob-to-any-file: ['src/**/*', 'tests/**/*']
+    - head-branch: ['^feat', '^feature']
+
+# Add 'documentation' label to any changes within 'docs' directory or markdown files
+documentation:
+  - changed-files:
+    - any-glob-to-any-file: ['docs/**/*', '*.md', '.github/ISSUE_TEMPLATE/**/*']
+
+# Add 'tests' label to any changes within 'tests' directory
+tests:
+  - changed-files:
+    - any-glob-to-any-file: ['tests/**/*']
+
+# Add 'ci' label to any changes within '.github' directory
+ci:
+  - changed-files:
+    - any-glob-to-any-file: ['.github/**/*']
