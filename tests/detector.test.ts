@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { detectFormat } from '../src/detector';
+import { detectFormat } from '../src/detector.js';
 
 // ── Helpers ───────────────────────────────────────────────────────
 
