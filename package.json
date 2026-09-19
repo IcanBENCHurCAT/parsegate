@@ -36,7 +36,7 @@
     "exceljs": "^4.4.0",
     "form-data": "^4.0.1",
     "hono": "^4.13.5",
-    "mammoth": "^1.12.2",
+    "mammoth": "^1.12.3",
     "pdf-parse": "^1.1.1",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
