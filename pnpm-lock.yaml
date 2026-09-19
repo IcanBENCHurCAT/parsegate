@@ -15,8 +15,8 @@ importers:
         specifier: ^0.6.1
         version: 0.6.1(hono@4.13.5)
       '@x402/avm':
-        specifier: ^2.25.0
-        version: 2.25.0
+        specifier: ^2.26.0
+        version: 2.26.0
       '@x402/core':
         specifier: ^2.24.0
         version: 2.24.0
@@ -693,8 +693,8 @@ packages:
   '@vitest/utils@4.1.11':
     resolution: {integrity: sha512-zTCVGpyFsGWBhllOyKlTw/vnr6D9qxsfSDyfbyZmTyjHw5N/VuvzHpHoQjm2ZJzn4RJgx5w4r7V0er69CmLgPQ==}
 
-  '@x402/avm@2.25.0':
-    resolution: {integrity: sha512-MXH6HdaMGddWrY65r4+ya+HVFJw5DIgdHKNCy632JtFYYHuqI59/5Sn/wE0afxb9pLbVMp6PC6iZ+MvjN3EOww==}
+  '@x402/avm@2.26.0':
+    resolution: {integrity: sha512-jnBAIziOc3MQ7h/DmaVrE61gWI0ZJemkMP8hp4i+n4q0hnFm/Khaxn2qf42gtiFDQQAij076qp3z6SbP/fy09w==}
 
   '@x402/core@2.23.0':
     resolution: {integrity: sha512-EFeV0nXbTPPe5FXaD6y9vMgqc+k/ujLXCrUPrQXkmHjHyjC3Ir5tTL1e2FPSkx2+GUGzfpt1wVZb36639ygkWw==}
@@ -702,8 +702,8 @@ packages:
   '@x402/core@2.24.0':
     resolution: {integrity: sha512-zKFbG+RgUhBXT9RcBQZGPW1cZXL9xpiTv68XSSuO1SMoobudmVvxYgP/bhoxJuAoqJjjEceeAhT4/EcA/wolrQ==}
 
-  '@x402/core@2.25.0':
-    resolution: {integrity: sha512-5Ys0XYz3FKutxVKoXC46R/XPT/oaAbuj7ahzrlVHwQxZJPH9u6u91IOh0ztz+7G/zYGsaXR8l3ety205QtEnUw==}
+  '@x402/core@2.26.0':
+    resolution: {integrity: sha512-8dlXip9u0JjyELzzFz48vntuMajvUjA8IYpitfaW423m53bR49amZDIn3n4gXRYoNEKzGB9Rtn8at35WHz61cA==}
 
   '@x402/extensions@2.23.0':
     resolution: {integrity: sha512-K0hDWGNrQ5iU8CdDzM8RpYrMusfqs2rgZJbCfUnFXG61TjgFIYYyLExaP8jJ4y2ac0SGXYZC1MI+uJA6YP3TTw==}
@@ -2680,10 +2680,10 @@ snapshots:
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.1
 
-  '@x402/avm@2.25.0':
+  '@x402/avm@2.26.0':
     dependencies:
       '@algorandfoundation/algokit-utils': 10.0.0-alpha.46
-      '@x402/core': 2.25.0
+      '@x402/core': 2.26.0
 
   '@x402/core@2.23.0':
     dependencies:
@@ -2693,7 +2693,7 @@ snapshots:
     dependencies:
       zod: 3.25.76
 
-  '@x402/core@2.25.0':
+  '@x402/core@2.26.0':
     dependencies:
       zod: 3.25.76
 
