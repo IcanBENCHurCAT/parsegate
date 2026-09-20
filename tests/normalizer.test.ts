@@ -242,6 +242,34 @@ describe('normalize — markdown', () => {
     expect(doc.format).toBe('md');
     expect(doc.elements[0].type).toBe('heading');
   });
+
+  it('parses markdown tables correctly', () => {
+    const content = `
+# Title
+
+Some text.
+
+| Header 1 | Header 2 |
+| -------- | -------- |
+| Cell 1   | Cell 2   |
+| Cell 3   | Cell 4   |
+
+More text.
+`;
+    const triage = detectFormat(Buffer.from(content), 'test.md');
+    const doc = normalize(Buffer.from(content), triage);
+
+    expect(doc.elements.length).toBe(4);
+    expectHeading(doc.elements[0], 'Title', 1, 1.0);
+    expectParagraph(doc.elements[1], 'Some text.', 1.0);
+
+    expectTable(doc.elements[2], ['Header 1', 'Header 2'], [
+      ['Cell 1', 'Cell 2'],
+      ['Cell 3', 'Cell 4'],
+    ], 1.0);
+
+    expectParagraph(doc.elements[3], 'More text.', 1.0);
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────

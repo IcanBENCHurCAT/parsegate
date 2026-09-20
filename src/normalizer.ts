@@ -87,6 +87,9 @@ const normalizeMarkdown: NormalizerFn = (buffer, triage) => {
   const lines = text.split(/\r?\n/);
 
   let currentParagraph: string[] = [];
+  let inTable = false;
+  let tableHeaders: string[] = [];
+  let tableRows: string[][] = [];
 
   const flushParagraph = () => {
     if (currentParagraph.length === 0) return;
@@ -101,11 +104,46 @@ const normalizeMarkdown: NormalizerFn = (buffer, triage) => {
     currentParagraph = [];
   };
 
-  for (const line of lines) {
+  const flushTable = () => {
+    if (!inTable) return;
+    if (tableHeaders.length > 0) {
+      doc.elements.push({
+        type: 'table',
+        headers: tableHeaders,
+        rows: tableRows,
+        colCount: tableHeaders.length,
+        rowCount: tableRows.length,
+        confidence: defaultConfidenceForTier(triage.tier),
+        tags: ['structured-data'],
+      });
+    }
+    inTable = false;
+    tableHeaders = [];
+    tableRows = [];
+  };
+
+  const parseTableRow = (line: string): string[] => {
+    let text = line.trim();
+    if (text.startsWith('|')) text = text.substring(1);
+    if (text.endsWith('|')) text = text.substring(0, text.length - 1);
+    return text.split('|').map((c) => c.trim());
+  };
+
+  const isTableSeparator = (line: string): boolean => {
+    const trimmed = line.trim();
+    if (!trimmed.includes('-')) return false;
+    const stripped = trimmed.replace(/[|\s-:]/g, '');
+    return stripped.length === 0 && trimmed.includes('|');
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
     // ATX heading detection: # ... ######
     const headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
     if (headingMatch) {
-      flushParagraph();
+      if (inTable) flushTable();
+      else flushParagraph();
       doc.elements.push({
         type: 'heading',
         text: headingMatch[2],
@@ -117,14 +155,40 @@ const normalizeMarkdown: NormalizerFn = (buffer, triage) => {
 
     // Blank line or horizontal rule
     if (/^(\s*|---|\*\*\*|___)\s*$/.test(line)) {
-      flushParagraph();
+      if (inTable) flushTable();
+      else flushParagraph();
       continue;
+    }
+
+    // Table processing
+    if (inTable) {
+      if (line.includes('|')) {
+        tableRows.push(parseTableRow(line));
+      } else {
+        flushTable();
+        // The line that broke the table becomes part of a new paragraph
+        currentParagraph.push(line);
+      }
+      continue;
+    }
+
+    // Check for table start (current line is headers, next line is separator)
+    if (line.includes('|') && i + 1 < lines.length) {
+      const nextLine = lines[i + 1] ?? '';
+      if (isTableSeparator(nextLine)) {
+        flushParagraph();
+        inTable = true;
+        tableHeaders = parseTableRow(line);
+        i++; // skip the separator line
+        continue;
+      }
     }
 
     // Collect paragraph lines
     currentParagraph.push(line);
   }
-  flushParagraph();
+  if (inTable) flushTable();
+  else flushParagraph();
 
   // Tag code blocks as a special paragraph annotation
   // (simplified: detect fenced code blocks and tag them)
