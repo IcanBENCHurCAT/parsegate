@@ -1,18 +1,17 @@
 bug:
-  - "src/**/*"
-  - "tests/**/*"
+  - src/**/*
+  - tests/**/*
 
 enhancement:
-  - "src/**/*"
-  - "tests/**/*"
+  - src/**/*
+  - tests/**/*
 
 documentation:
-  - "docs/**/*"
+  - docs/**/*
   - "*.md"
-  - ".github/ISSUE_TEMPLATE/**/*"
 
 tests:
-  - "tests/**/*"
+  - tests/**/*
 
 ci:
-  - ".github/**/*"
+  - .github/**/*
