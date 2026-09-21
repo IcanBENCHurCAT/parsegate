@@ -87,9 +87,6 @@ const normalizeMarkdown: NormalizerFn = (buffer, triage) => {
   const lines = text.split(/\r?\n/);
 
   let currentParagraph: string[] = [];
-  let inTable = false;
-  let tableHeaders: string[] = [];
-  let tableRows: string[][] = [];
 
   const flushParagraph = () => {
     if (currentParagraph.length === 0) return;
@@ -104,68 +101,11 @@ const normalizeMarkdown: NormalizerFn = (buffer, triage) => {
     currentParagraph = [];
   };
 
-  const flushTable = () => {
-    if (!inTable) return;
-    if (tableHeaders.length > 0) {
-      doc.elements.push({
-        type: 'table',
-        headers: tableHeaders,
-        rows: tableRows,
-        colCount: tableHeaders.length,
-        rowCount: tableRows.length,
-        confidence: defaultConfidenceForTier(triage.tier),
-        tags: ['structured-data'],
-      });
-    }
-    inTable = false;
-    tableHeaders = [];
-    tableRows = [];
-  };
-
-  const parseTableRow = (line: string): string[] => {
-    let text = line.trim();
-    if (text.startsWith('|')) text = text.substring(1);
-    if (text.endsWith('|')) text = text.substring(0, text.length - 1);
-
-    // Split on pipe while respecting inline code spans (backticks).
-    // A pipe inside backticks is literal cell content, not a cell separator.
-    const cells: string[] = [];
-    let current: string[] = [];
-    let inBacktick = false;
-    for (let i = 0; i < text.length; i++) {
-      const ch = text[i];
-      if (ch === '`') {
-        inBacktick = !inBacktick;
-        current.push(ch);
-      } else if (ch === '|' && !inBacktick) {
-        cells.push(current.join('').trim());
-        current = [];
-      } else {
-        current.push(ch);
-      }
-    }
-    // Push the last cell
-    if (current.length > 0) {
-      cells.push(current.join('').trim());
-    }
-    return cells;
-  };
-
-  const isTableSeparator = (line: string): boolean => {
-    const trimmed = line.trim();
-    if (!trimmed.includes('-')) return false;
-    const stripped = trimmed.replace(/[|\s-:]/g, '');
-    return stripped.length === 0 && trimmed.includes('|');
-  };
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
+  for (const line of lines) {
     // ATX heading detection: # ... ######
     const headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
     if (headingMatch) {
-      if (inTable) flushTable();
-      else flushParagraph();
+      flushParagraph();
       doc.elements.push({
         type: 'heading',
         text: headingMatch[2],
@@ -177,40 +117,14 @@ const normalizeMarkdown: NormalizerFn = (buffer, triage) => {
 
     // Blank line or horizontal rule
     if (/^(\s*|---|\*\*\*|___)\s*$/.test(line)) {
-      if (inTable) flushTable();
-      else flushParagraph();
+      flushParagraph();
       continue;
-    }
-
-    // Table processing
-    if (inTable) {
-      if (line.includes('|')) {
-        tableRows.push(parseTableRow(line));
-      } else {
-        flushTable();
-        // The line that broke the table becomes part of a new paragraph
-        currentParagraph.push(line);
-      }
-      continue;
-    }
-
-    // Check for table start (current line is headers, next line is separator)
-    if (line.includes('|') && i + 1 < lines.length) {
-      const nextLine = lines[i + 1] ?? '';
-      if (isTableSeparator(nextLine)) {
-        flushParagraph();
-        inTable = true;
-        tableHeaders = parseTableRow(line);
-        i++; // skip the separator line
-        continue;
-      }
     }
 
     // Collect paragraph lines
     currentParagraph.push(line);
   }
-  if (inTable) flushTable();
-  else flushParagraph();
+  flushParagraph();
 
   // Tag code blocks as a special paragraph annotation
   // (simplified: detect fenced code blocks and tag them)
