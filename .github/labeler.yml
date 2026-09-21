@@ -1,23 +1,18 @@
 bug:
-  - changed-files:
-      - any-glob-to-any-file: "src/**/*"
-      - any-glob-to-any-file: "tests/**/*"
+  - "src/**/*"
+  - "tests/**/*"
 
 enhancement:
-  - changed-files:
-      - any-glob-to-any-file: "src/**/*"
-      - any-glob-to-any-file: "tests/**/*"
+  - "src/**/*"
+  - "tests/**/*"
 
 documentation:
-  - changed-files:
-      - any-glob-to-any-file: "docs/**/*"
-      - any-glob-to-any-file: "*.md"
-      - any-glob-to-any-file: ".github/ISSUE_TEMPLATE/**/*"
+  - "docs/**/*"
+  - "*.md"
+  - ".github/ISSUE_TEMPLATE/**/*"
 
 tests:
-  - changed-files:
-      - any-glob-to-any-file: "tests/**/*"
+  - "tests/**/*"
 
 ci:
-  - changed-files:
-      - any-glob-to-any-file: ".github/**/*"
+  - ".github/**/*"
