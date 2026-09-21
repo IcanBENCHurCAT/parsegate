@@ -3,14 +3,14 @@ bug:
   - all:
     - changed-files:
       - any-glob-to-any-file: ['src/**/*', 'tests/**/*']
-    - head-branch: 'fix*||bug*'
+    - head-branch: ['fix*', 'bug*']
 
 # Add 'enhancement' label to any changes within 'src' or 'tests' directories if the PR title contains 'feat'
 enhancement:
   - all:
     - changed-files:
       - any-glob-to-any-file: ['src/**/*', 'tests/**/*']
-    - head-branch: 'feat*||feature*'
+    - head-branch: ['feat*', 'feature*']
 
 # Add 'documentation' label to any changes within 'docs' directory or markdown files
 documentation:
