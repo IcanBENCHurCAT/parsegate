@@ -126,7 +126,29 @@ const normalizeMarkdown: NormalizerFn = (buffer, triage) => {
     let text = line.trim();
     if (text.startsWith('|')) text = text.substring(1);
     if (text.endsWith('|')) text = text.substring(0, text.length - 1);
-    return text.split('|').map((c) => c.trim());
+
+    // Split on pipe while respecting inline code spans (backticks).
+    // A pipe inside backticks is literal cell content, not a cell separator.
+    const cells: string[] = [];
+    let current: string[] = [];
+    let inBacktick = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (ch === '`') {
+        inBacktick = !inBacktick;
+        current.push(ch);
+      } else if (ch === '|' && !inBacktick) {
+        cells.push(current.join('').trim());
+        current = [];
+      } else {
+        current.push(ch);
+      }
+    }
+    // Push the last cell
+    if (current.length > 0) {
+      cells.push(current.join('').trim());
+    }
+    return cells;
   };
 
   const isTableSeparator = (line: string): boolean => {

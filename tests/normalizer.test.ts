@@ -270,6 +270,19 @@ More text.
 
     expectParagraph(doc.elements[3], 'More text.', 1.0);
   });
+
+  it('parses tables with pipe inside inline code spans', () => {
+    const content = `| Column A | Column B |
+| -------- | -------- |
+| \`a|b\`   | normal   |`;
+    const triage = detectFormat(Buffer.from(content), 'test.md');
+    const doc = normalize(Buffer.from(content), triage);
+
+    expect(doc.elements.length).toBe(1);
+    expectTable(doc.elements[0], ['Column A', 'Column B'], [
+      ['`a|b`', 'normal'],
+    ], 1.0);
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────
