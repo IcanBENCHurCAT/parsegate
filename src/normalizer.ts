@@ -87,6 +87,8 @@ const normalizeMarkdown: NormalizerFn = (buffer, triage) => {
   const lines = text.split(/\r?\n/);
 
   let currentParagraph: string[] = [];
+  let currentTableLines: string[] = [];
+  let inCodeFence = false;
 
   const flushParagraph = () => {
     if (currentParagraph.length === 0) return;
@@ -101,7 +103,89 @@ const normalizeMarkdown: NormalizerFn = (buffer, triage) => {
     currentParagraph = [];
   };
 
+  // Split a GFM table row into trimmed cells. Strips the optional outer
+  // pipes and honors escaped pipes (\|) inside cells.
+  const splitTableRow = (line: string): string[] => {
+    const trimmed = line.trim().replace(/^\|/, '').replace(/\|$/, '');
+    const cells: string[] = [];
+    let current = '';
+    for (let i = 0; i < trimmed.length; i++) {
+      const ch = trimmed[i];
+      if (ch === '\\' && trimmed[i + 1] === '|') {
+        current += '|';
+        i++;
+      } else if (ch === '|') {
+        cells.push(current.trim());
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    cells.push(current.trim());
+    return cells;
+  };
+
+  // A GFM separator row: every cell is made of dashes with optional
+  // leading/trailing alignment colons (---, :---, ---:, :---:), at least
+  // one dash per cell, and at least one cell.
+  const isSeparatorRow = (line: string): boolean => {
+    const cells = splitTableRow(line);
+    return cells.length >= 1 && cells.every((c) => /^:?-+:?$/.test(c));
+  };
+
+  const flushTable = () => {
+    if (currentTableLines.length === 0) return;
+    const tableLines = currentTableLines;
+    currentTableLines = [];
+
+    // A real GFM table needs a header row followed by a separator row.
+    if (tableLines.length >= 2 && isSeparatorRow(tableLines[1])) {
+      // The separator defines the canonical column count.
+      const colCount = Math.max(splitTableRow(tableLines[1]).length, 1);
+      const normalizeCells = (line: string): string[] => {
+        const cells = splitTableRow(line).slice(0, colCount);
+        while (cells.length < colCount) cells.push('');
+        return cells;
+      };
+      const headers = normalizeCells(tableLines[0]);
+      const rows = tableLines.slice(2).map(normalizeCells);
+      doc.elements.push({
+        type: 'table',
+        headers,
+        rows,
+        colCount,
+        rowCount: rows.length,
+        confidence: defaultConfidenceForTier(triage.tier),
+      });
+      return;
+    }
+
+    // Pipe rows without a separator row are not a table — degrade to
+    // paragraph text so nothing is lost.
+    currentParagraph.push(...tableLines);
+  };
+
   for (const line of lines) {
+    // Track fenced code blocks so pipe rows inside them are not parsed
+    // as tables.
+    if (/^\s*(```|~~~)/.test(line)) {
+      inCodeFence = !inCodeFence;
+      currentParagraph.push(line);
+      continue;
+    }
+    if (inCodeFence) {
+      currentParagraph.push(line);
+      continue;
+    }
+
+    // GFM table row: any line containing a pipe character.
+    if (line.includes('|')) {
+      flushParagraph();
+      currentTableLines.push(line);
+      continue;
+    }
+    flushTable();
+
     // ATX heading detection: # ... ######
     const headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
     if (headingMatch) {
@@ -124,6 +208,7 @@ const normalizeMarkdown: NormalizerFn = (buffer, triage) => {
     // Collect paragraph lines
     currentParagraph.push(line);
   }
+  flushTable();
   flushParagraph();
 
   // Tag code blocks as a special paragraph annotation
