@@ -242,6 +242,144 @@ describe('normalize — markdown', () => {
     expect(doc.format).toBe('md');
     expect(doc.elements[0].type).toBe('heading');
   });
+
+  it('parses a GFM table into a structured TableElement', () => {
+    const content = [
+      '# Report',
+      '',
+      '| Metric | Q1 | Q2 |',
+      '|--------|---:|---:|',
+      '| Revenue | 1.2M | 1.4M |',
+      '| Costs | 0.8M | 0.9M |',
+      '',
+      'Closing note.',
+    ].join('\n');
+    const triage = detectFormat(Buffer.from(content), 'report.md');
+    const doc = normalize(Buffer.from(content), triage);
+
+    expect(doc.elements.length).toBe(3);
+    expectHeading(doc.elements[0], 'Report', 1, 1.0);
+    expectTable(
+      doc.elements[1],
+      ['Metric', 'Q1', 'Q2'],
+      [
+        ['Revenue', '1.2M', '1.4M'],
+        ['Costs', '0.8M', '0.9M'],
+      ],
+      1.0,
+    );
+    expectParagraph(doc.elements[2], 'Closing note.', 1.0);
+  });
+
+  it('handles GFM tables without outer pipes and indented rows', () => {
+    const content = [
+      'Metric, alignment only',
+      '',
+      'Name | Price',
+      '--- | ---',
+      'Apple | $1.00',
+      '',
+      '  | Indented | Row |',
+      '  | :--- | :---: |',
+      '  | a | b |',
+    ].join('\n');
+    const triage = detectFormat(Buffer.from(content), 'table.md');
+    const doc = normalize(Buffer.from(content), triage);
+
+    expect(doc.elements.length).toBe(3);
+    expectParagraph(doc.elements[0], 'Metric, alignment only', 1.0);
+    expectTable(
+      doc.elements[1],
+      ['Name', 'Price'],
+      [['Apple', '$1.00']],
+      1.0,
+    );
+    expectTable(
+      doc.elements[2],
+      ['Indented', 'Row'],
+      [['a', 'b']],
+      1.0,
+    );
+  });
+
+  it('pads short rows and trims long rows to the separator column count', () => {
+    const content = [
+      '| A | B | C |',
+      '|---|---|---|',
+      '| only-one |',
+      '| one | two | three | four |',
+    ].join('\n');
+    const triage = detectFormat(Buffer.from(content), 'ragged.md');
+    const doc = normalize(Buffer.from(content), triage);
+
+    expect(doc.elements.length).toBe(1);
+    const table = doc.elements[0] as TableElement;
+    expect(table.type).toBe('table');
+    expect(table.colCount).toBe(3);
+    expect(table.headers).toEqual(['A', 'B', 'C']);
+    expect(table.rows).toEqual([
+      ['only-one', '', ''],
+      ['one', 'two', 'three'],
+    ]);
+  });
+
+  it('degrades pipe rows without a separator row into a paragraph', () => {
+    const content = [
+      'a | b',
+      'c | d',
+      'e | f',
+    ].join('\n');
+    const triage = detectFormat(Buffer.from(content), 'plain.md');
+    const doc = normalize(Buffer.from(content), triage);
+
+    expect(doc.elements.length).toBe(1);
+    expectParagraph(doc.elements[0], 'a | b\nc | d\ne | f', 1.0);
+  });
+
+  it('does not treat pipe rows inside fenced code blocks as tables', () => {
+    const content = [
+      'Before.',
+      '',
+      '```',
+      '| x | y |',
+      '|---|---|',
+      '| 1 | 2 |',
+      '```',
+      '',
+      'After.',
+    ].join('\n');
+    const triage = detectFormat(Buffer.from(content), 'code.md');
+    const doc = normalize(Buffer.from(content), triage);
+
+    const tables = doc.elements.filter((e) => e.type === 'table');
+    expect(tables.length).toBe(0);
+    expectParagraph(doc.elements[0], 'Before.', 1.0);
+    const codeBlock = doc.elements[1];
+    expect(codeBlock.type).toBe('paragraph');
+    expect(codeBlock.tags).toContain('code-block');
+    expectParagraph(doc.elements[2], 'After.', 1.0);
+  });
+
+  it('parses multiple tables in one document in order', () => {
+    const content = [
+      '| A | B |',
+      '|---|---|',
+      '| 1 | 2 |',
+      '',
+      'Between.',
+      '',
+      '| C |',
+      '|---|',
+      '| 3 |',
+    ].join('\n');
+    const triage = detectFormat(Buffer.from(content), 'two.md');
+    const doc = normalize(Buffer.from(content), triage);
+
+    expect(doc.elements.length).toBe(3);
+    expectTable(doc.elements[0], ['A', 'B'], [['1', '2']], 1.0);
+    expectParagraph(doc.elements[1], 'Between.', 1.0);
+    expectTable(doc.elements[2], ['C'], [['3']], 1.0);
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────
