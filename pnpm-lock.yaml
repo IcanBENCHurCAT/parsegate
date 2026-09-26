@@ -18,8 +18,8 @@ importers:
         specifier: ^2.27.0
         version: 2.27.0
       '@x402/core':
-        specifier: ^2.24.0
-        version: 2.26.0
+        specifier: ^2.27.0
+        version: 2.27.0
       '@x402/extensions':
         specifier: ^2.27.0
         version: 2.27.0(typescript@5.9.3)
@@ -722,9 +722,6 @@ packages:
 
   '@x402/avm@2.27.0':
     resolution: {integrity: sha512-NIJ4nfnh+lRVjdPm7oH6xZnxwThYrreTgZnlb4+yzOLLSCRS+J9aXODeLZYFD0yXgsbknn3n3Su/MeMe7WlMpw==}
-
-  '@x402/core@2.26.0':
-    resolution: {integrity: sha512-8dlXip9u0JjyELzzFz48vntuMajvUjA8IYpitfaW423m53bR49amZDIn3n4gXRYoNEKzGB9Rtn8at35WHz61cA==}
 
   '@x402/core@2.27.0':
     resolution: {integrity: sha512-UbxCKnoTsg5nQX9fYER3g9tt5l80jHm1IZOmDczQRqE0cwskls5r+VAAj0iUQfHVshnpv0qo/rLFI7UntqL96g==}
@@ -2724,10 +2721,6 @@ snapshots:
     dependencies:
       '@algorandfoundation/algokit-utils': 10.0.0-alpha.46
       '@x402/core': 2.27.0
-
-  '@x402/core@2.26.0':
-    dependencies:
-      zod: 3.25.76
 
   '@x402/core@2.27.0':
     dependencies:
