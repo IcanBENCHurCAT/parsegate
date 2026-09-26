@@ -15,8 +15,8 @@ importers:
         specifier: ^0.6.1
         version: 0.6.1(hono@4.13.8)
       '@x402/avm':
-        specifier: ^2.26.0
-        version: 2.26.0
+        specifier: ^2.27.0
+        version: 2.27.0
       '@x402/core':
         specifier: ^2.24.0
         version: 2.26.0
@@ -690,8 +690,8 @@ packages:
   '@vitest/utils@4.1.11':
     resolution: {integrity: sha512-zTCVGpyFsGWBhllOyKlTw/vnr6D9qxsfSDyfbyZmTyjHw5N/VuvzHpHoQjm2ZJzn4RJgx5w4r7V0er69CmLgPQ==}
 
-  '@x402/avm@2.26.0':
-    resolution: {integrity: sha512-jnBAIziOc3MQ7h/DmaVrE61gWI0ZJemkMP8hp4i+n4q0hnFm/Khaxn2qf42gtiFDQQAij076qp3z6SbP/fy09w==}
+  '@x402/avm@2.27.0':
+    resolution: {integrity: sha512-NIJ4nfnh+lRVjdPm7oH6xZnxwThYrreTgZnlb4+yzOLLSCRS+J9aXODeLZYFD0yXgsbknn3n3Su/MeMe7WlMpw==}
 
   '@x402/core@2.26.0':
     resolution: {integrity: sha512-8dlXip9u0JjyELzzFz48vntuMajvUjA8IYpitfaW423m53bR49amZDIn3n4gXRYoNEKzGB9Rtn8at35WHz61cA==}
@@ -2653,10 +2653,10 @@ snapshots:
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.1
 
-  '@x402/avm@2.26.0':
+  '@x402/avm@2.27.0':
     dependencies:
       '@algorandfoundation/algokit-utils': 10.0.0-alpha.46
-      '@x402/core': 2.26.0
+      '@x402/core': 2.27.0
 
   '@x402/core@2.26.0':
     dependencies:
