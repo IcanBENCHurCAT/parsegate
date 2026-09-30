@@ -148,6 +148,8 @@ export interface Qwen3Response {
 interface OCRConfig {
   /** Google Cloud Vision API key. Required for OCR. */
   apiKey: string;
+  /** Qwen3 API key. Optional. */
+  qwenApiKey?: string;
   /** Qwen3 base URL for local model (OpenAI-compatible API). */
   qwen3BaseUrl?: string;
   /** Qwen3 model name (default: qwen3). */
@@ -162,6 +164,7 @@ interface OCRConfig {
 
 const DEFAULT_CONFIG: Required<OCRConfig> = {
   apiKey: '',
+  qwenApiKey: '',
   qwen3BaseUrl: '',
   qwen3Model: 'qwen3',
   qwen3MaxTokens: 8192,
@@ -319,7 +322,7 @@ export async function structureWithQwen3(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(process.env.QWEN_API_KEY ? { Authorization: `Bearer ${process.env.QWEN_API_KEY}` } : {}),
+        ...(config.qwenApiKey ? { Authorization: `Bearer ${config.qwenApiKey}` } : {}),
       },
       body: JSON.stringify({
         model: qwen3Model,

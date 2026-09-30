@@ -194,7 +194,7 @@ describe('OCR Pipeline — Qwen3 Structuring', () => {
 
     const result = await structureWithQwen3(
       'Hello from scanned PDF.',
-      { qwen3BaseUrl: 'http://localhost:8080' },
+      { qwen3BaseUrl: 'http://localhost:8080', qwenApiKey: 'test-qwen-key' },
       1,
     );
 
@@ -216,7 +216,7 @@ describe('OCR Pipeline — Qwen3 Structuring', () => {
 
     const result = await structureWithQwen3(
       'Test content',
-      { qwen3BaseUrl: 'http://localhost:8080' },
+      { qwen3BaseUrl: 'http://localhost:8080', qwenApiKey: 'test-qwen-key' },
       1,
     );
 
@@ -233,7 +233,7 @@ describe('OCR Pipeline — Qwen3 Structuring', () => {
 
     const result = await structureWithQwen3(
       'Test content',
-      { qwen3BaseUrl: 'http://localhost:8080' },
+      { qwen3BaseUrl: 'http://localhost:8080', qwenApiKey: 'test-qwen-key' },
       1,
     );
 
@@ -245,7 +245,7 @@ describe('OCR Pipeline — Qwen3 Structuring', () => {
 
     const result = await structureWithQwen3(
       'Test content',
-      { qwen3BaseUrl: 'http://localhost:8080' },
+      { qwen3BaseUrl: 'http://localhost:8080', qwenApiKey: 'test-qwen-key' },
       1,
     );
 
@@ -296,7 +296,7 @@ describe('OCR Pipeline — End-to-End', () => {
 
     const doc = await ocrPipeline(createMockPdf('scanned'), triage, {
       apiKey: 'test-gcv-key',
-      qwen3BaseUrl: 'http://localhost:8080',
+      qwen3BaseUrl: 'http://localhost:8080', qwenApiKey: 'test-qwen-key',
     });
 
     expect(doc.format).toBe('pdf');
@@ -333,7 +333,7 @@ describe('OCR Pipeline — End-to-End', () => {
 
     const doc = await ocrPipeline(createMockPdf('scanned'), triage, {
       apiKey: 'test-gcv-key',
-      qwen3BaseUrl: 'http://localhost:8080',
+      qwen3BaseUrl: 'http://localhost:8080', qwenApiKey: 'test-qwen-key',
     });
 
     // Should fall back to Vision-based elements
@@ -358,7 +358,7 @@ describe('OCR Pipeline — End-to-End', () => {
 
     const doc = await ocrPipeline(createMockPdf('scanned'), triage, {
       apiKey: '', // No API key
-      qwen3BaseUrl: 'http://localhost:8080',
+      qwen3BaseUrl: 'http://localhost:8080', qwenApiKey: 'test-qwen-key',
     });
 
     expect(doc.elements.length).toBe(0);
@@ -397,7 +397,7 @@ describe('OCR Pipeline — End-to-End', () => {
 
     const doc = await ocrPipeline(createMockPdf('scanned'), triage, {
       apiKey: 'test-gcv-key',
-      qwen3BaseUrl: 'http://localhost:8080',
+      qwen3BaseUrl: 'http://localhost:8080', qwenApiKey: 'test-qwen-key',
     });
 
     expect(doc.elements.length).toBe(5);
@@ -449,7 +449,7 @@ describe('OCR Pipeline — End-to-End', () => {
 
     const doc = await ocrPipeline(createMockPdf('scanned'), triage, {
       apiKey: 'test-gcv-key',
-      qwen3BaseUrl: 'http://localhost:8080',
+      qwen3BaseUrl: 'http://localhost:8080', qwenApiKey: 'test-qwen-key',
     });
 
     expect(doc.metadata.language).toBe('es');
@@ -571,7 +571,7 @@ describe('OCR Pipeline — Integration with existing system', () => {
 
     const doc = await ocrPipeline(pdfContent, triage, {
       apiKey: 'test-key',
-      qwen3BaseUrl: 'http://localhost:8080',
+      qwen3BaseUrl: 'http://localhost:8080', qwenApiKey: 'test-qwen-key',
     });
 
     expect(doc.format).toBe('pdf');
@@ -636,7 +636,7 @@ describe('OCR Pipeline — Config', () => {
     await structureWithQwen3(
       'Test content',
       {
-        qwen3BaseUrl: 'http://localhost:8080',
+        qwen3BaseUrl: 'http://localhost:8080', qwenApiKey: 'test-qwen-key',
         qwen3Model: 'qwen3-max',
         qwen3MaxTokens: 4096,
         qwen3Temperature: 0.05,
@@ -665,7 +665,7 @@ describe('OCR Pipeline — Error Handling', () => {
 
     const doc = await ocrPipeline(createMockPdf('large scanned doc'), triage, {
       apiKey: 'test-key',
-      qwen3BaseUrl: 'http://localhost:8080',
+      qwen3BaseUrl: 'http://localhost:8080', qwenApiKey: 'test-qwen-key',
     });
 
     expect(doc.elements.length).toBe(0);
@@ -697,7 +697,7 @@ describe('OCR Pipeline — Error Handling', () => {
 
     const doc = await ocrPipeline(createMockPdf('scanned'), triage, {
       apiKey: 'test-key',
-      qwen3BaseUrl: 'http://localhost:8080',
+      qwen3BaseUrl: 'http://localhost:8080', qwenApiKey: 'test-qwen-key',
     });
 
     // Should fall back to Vision annotations since Qwen3 JSON parsing failed
