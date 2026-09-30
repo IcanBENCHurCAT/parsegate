@@ -58,6 +58,7 @@ app.post('/v1/parse', async (c) => {
     const doc = triage.tier === 'scanned' && triage.needsOCR
       ? await ocrPipeline(buffer, triage, {
           apiKey: config.googleCloudVisionApiKey,
+          qwenApiKey: config.qwenApiKey,
           qwen3BaseUrl: config.qwen3BaseUrl,
         })
       : normalize(buffer, triage);
@@ -142,6 +143,7 @@ app.post('/v1/parse/async', async (c) => {
     const doc = triage.tier === 'scanned' && triage.needsOCR
       ? await ocrPipeline(buffer, triage, {
           apiKey: config.googleCloudVisionApiKey,
+          qwenApiKey: config.qwenApiKey,
           qwen3BaseUrl: config.qwen3BaseUrl,
         })
       : normalize(buffer, triage);
@@ -313,6 +315,7 @@ app.post('/v1/detect', async (c) => {
     const doc = triage.tier === 'scanned' && triage.needsOCR
       ? await ocrPipeline(buffer, triage, {
           apiKey: config.googleCloudVisionApiKey,
+          qwenApiKey: config.qwenApiKey,
           qwen3BaseUrl: config.qwen3BaseUrl,
         })
       : normalize(buffer, triage);
