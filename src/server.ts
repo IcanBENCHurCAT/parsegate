@@ -1,7 +1,8 @@
 import { serve } from '@hono/node-server';
 import { app } from './index.js';
+import { config } from './config.js';
 
-const PORT = parseInt(process.env.PORT || '3000', 10);
+const PORT = config.port;
 
 if (import.meta.url.endsWith(process.argv[1] || '')) {
   serve({ fetch: app.fetch, port: PORT }, (info) => {
