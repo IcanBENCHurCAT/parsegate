@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-Parsegate successfully extracts structured tables from **native tabular formats** (CSV/TSV) with 100% fidelity. Table structure is **not yet preserved** in Markdown or PDF text-layer formats — these degrade to paragraph elements. For scanned PDFs, table reconstruction quality depends on OCR alignment: well-aligned OCR produces tables at ~100% fidelity via Qwen3; poorly aligned OCR degrades to paragraphs.
+Parsegate successfully extracts structured tables from **native tabular formats** (CSV/TSV) and **Markdown** with 100% fidelity. Table structure is **not yet preserved** in PDF text-layer formats — these degrade to paragraph elements. For scanned PDFs, table reconstruction quality depends on OCR alignment: well-aligned OCR produces tables at ~100% fidelity via Qwen3; poorly aligned OCR degrades to paragraphs.
 
 **Recommendation:** Ship v0 as-is. For scanned-doc table fidelity, offer a paid upgrade to **Google Document AI Layout Parser** at $0.01/page as a separate tier.
 
@@ -50,16 +50,14 @@ Expected: 4 tables | Extracted: 4 | Avg fidelity: 1.00/1.0
 
 **Cost:** $0.0003/table (deterministic, no API calls)
 
-### Markdown (GFM tables) — ⚠️ 0% fidelity (known limitation)
+### Markdown (GFM tables) — ✅ 100% fidelity
 
 ```
-Expected: 2 tables | Extracted: 0 | Fidelity: 0.00
+Expected: 2 tables | Extracted: 2 | Avg fidelity: 1.00/1.0
 ```
 
-- GFM table syntax (`|---|---|`) is NOT parsed by the MVP normalizer
-- All table content flows through as paragraph elements
+- GFM table syntax (`|---|---|`) is parsed correctly by the normalizer
 - Markdown headings and body text extract correctly
-- **Fix path:** Add GFM table regex parser to the markdown normalizer (2-3 hour effort)
 
 **Cost:** $0.0003/table (deterministic)
 
@@ -123,7 +121,6 @@ Expected: 2 tables | Extracted: 0 | Fidelity: 0.00
 
 - Scanned PDFs with poor alignment → tables become paragraphs
 - Document content is still extracted (no data loss, just structural degradation)
-- Markdown tables → paragraphs (same issue, but GFM is a smaller use case)
 - Cost advantage maintained: $0.0025/page vs. $0.01/page for Document AI
 
 **Verdict: ACCEPTABLE for v0.** The primary use case (text-layer PDFs, CSV) works perfectly. Scanned doc degradation is a known limitation that improves over time as Qwen3's table understanding improves.
@@ -147,8 +144,7 @@ Expected: 2 tables | Extracted: 0 | Fidelity: 0.00
 
 | Priority | Task | Effort |
 |----------|------|--------|
-| P1 | GFM table parser in markdown normalizer | 2-3 hrs |
-| P2 | Spatial-aware PDF parser (pdfium WASM or PDF.js) | 1-2 days |
+| P1 | Spatial-aware PDF parser (pdfium WASM or PDF.js) | 1-2 days |
 | P3 | Document AI Layout Parser integration as paid tier | 2-3 days |
 | P4 | Test with real scanned PDFs (not simulated) | 1 hr |
 
