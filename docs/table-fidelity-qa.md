@@ -50,16 +50,16 @@ Expected: 4 tables | Extracted: 4 | Avg fidelity: 1.00/1.0
 
 **Cost:** $0.0003/table (deterministic, no API calls)
 
-### Markdown (GFM tables) — ⚠️ 0% fidelity (known limitation)
+### Markdown (GFM tables) — ✅ 100% fidelity
 
 ```
-Expected: 2 tables | Extracted: 0 | Fidelity: 0.00
+Expected: 2 tables | Extracted: 2 | Avg fidelity: 1.00
 ```
 
-- GFM table syntax (`|---|---|`) is NOT parsed by the MVP normalizer
-- All table content flows through as paragraph elements
-- Markdown headings and body text extract correctly
-- **Fix path:** Add GFM table regex parser to the markdown normalizer (2-3 hour effort)
+- GFM table syntax (`|---|---|`) is parsed natively by the markdown normalizer.
+- Pipe rows without a separator row safely degrade to paragraph text so nothing is lost.
+- Markdown headings and body text extract correctly.
+- Supports escaped pipes (`\|`) inside table cells.
 
 **Cost:** $0.0003/table (deterministic)
 
@@ -147,7 +147,7 @@ Expected: 2 tables | Extracted: 0 | Fidelity: 0.00
 
 | Priority | Task | Effort |
 |----------|------|--------|
-| P1 | GFM table parser in markdown normalizer | 2-3 hrs |
+| ~~P1~~ | ~~GFM table parser in markdown normalizer~~ | ~~Done~~ |
 | P2 | Spatial-aware PDF parser (pdfium WASM or PDF.js) | 1-2 days |
 | P3 | Document AI Layout Parser integration as paid tier | 2-3 days |
 | P4 | Test with real scanned PDFs (not simulated) | 1 hr |

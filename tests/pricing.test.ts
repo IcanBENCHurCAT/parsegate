@@ -94,7 +94,8 @@ describe('computePrice — text tier', () => {
 
     expect(price.tier).toBe('text');
     expect(price.currency).toBe('USDC');
-    expect(price.amount).toBeGreaterThan(0);
+    // 1 page = ~3KB -> 3 / 100 * 0.002 = 0.00006. Floor is 0.001.
+    expect(price.amount).toBe(0.001);
     expect(price.hasOcrSurcharge).toBe(false);
     expect(price.estimatedPages).toBe(1);
     expect(price.breakdown).toContain('text-rate');
@@ -102,19 +103,20 @@ describe('computePrice — text tier', () => {
   });
 
   it('scales price with more pages', () => {
-    const p1 = computePrice(makeTriage({ tier: 'text', estimatedPages: 1 }));
-    const p10 = computePrice(makeTriage({ tier: 'text', estimatedPages: 10 }));
+    // Need enough pages to exceed floor price of 0.001
+    // 0.001 / 0.002 * 100 / 3 = 16.6 pages. So 17 pages should exceed floor.
+    const p20 = computePrice(makeTriage({ tier: 'text', estimatedPages: 20 }));
+    const p100 = computePrice(makeTriage({ tier: 'text', estimatedPages: 100 }));
 
-    expect(p10.amount).toBeGreaterThan(p1.amount);
+    expect(p100.amount).toBeGreaterThan(p20.amount);
   });
 
   it('enforces floor price when computed amount is below floor', () => {
-    const triage = makeTriage({ tier: 'text', estimatedPages: 1 });
+    const triage = makeTriage({ tier: 'text', estimatedPages: 5 });
     const price = computePrice(triage);
 
-    expect(price.amount).toBeGreaterThanOrEqual(
-      pricingTable.tiers.text.floorPrice!,
-    );
+    // 5 pages = ~15KB -> 15 / 100 * 0.002 = 0.0003. Floor is 0.001.
+    expect(price.amount).toBe(0.001);
   });
 });
 

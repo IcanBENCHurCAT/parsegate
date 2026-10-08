@@ -45,6 +45,36 @@ cp .env.example .env
 pnpm run dev
 ```
 
+### Quickstart
+
+**1. Format Detection (Free)**
+```bash
+curl -X POST -F "file=@document.pdf" http://localhost:3000/v1/detect
+```
+
+**2. Parse Document (Async Free Tier)**
+```bash
+curl -X POST \
+  -F "file=@document.pdf" \
+  -H "x-wallet-address: YOUR_ALGORAND_WALLET" \
+  http://localhost:3000/v1/parse/async
+```
+
+**3. Poll for Result**
+```bash
+curl http://localhost:3000/v1/jobs/<JOB_ID>
+```
+
+### Error Codes & Edge Cases
+
+| Status Code | Error Message | Description |
+|-------------|---------------|-------------|
+| **400** | `No file provided` | Request must be `multipart/form-data` with a `file` field. |
+| **402** | `Payment Required` | Missing or invalid `x402-credential`. The response contains a challenge. |
+| **413** | `File too large` | Uploads are strictly limited to 50MB. |
+| **429** | `Free tier limit exceeded`| Max 3 calls per day per wallet on the async free tier. |
+| **500** | `Parse failed` | Internal normalizer or OCR failure. |
+
 ### API Endpoints
 
 | Method | Endpoint | Description |
