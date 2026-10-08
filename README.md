@@ -30,6 +30,35 @@ An x402-native document-to-structured-data API. Agents pay per parse, in stablec
 └─────────────────────────────┘
 ```
 
+## 🤖 Agent Integration Guide (AX)
+
+Parsegate is designed for autonomous agent consumption using the **x402 protocol**.
+
+### The Payment Challenge Flow (Sync)
+1. Your agent makes a `POST /v1/parse` request with a document.
+2. If unpaid, Parsegate returns a **`402 Payment Required`** with a challenge payload (cost in USDC).
+3. Your agent fulfills the payment on-chain via the x402 facilitator.
+4. Your agent resubmits the exact same request, now including the `x402-credential` header.
+5. Parsegate verifies the credential and returns the parsed document.
+
+### Webhook Callbacks (Async)
+For long-running parses, use `/v1/parse/async` and provide an `x-webhook-url` header.
+- Parsegate will immediately return a `200 OK` with a `jobId`.
+- Once the parsing completes, Parsegate will make a `POST` request to your webhook URL containing the final parsed document.
+
+## ⚠️ Error Handling
+
+Agents should gracefully handle the following standard HTTP status codes:
+
+| Code | Meaning | Agent Action |
+|------|---------|--------------|
+| **400** | Bad Request | Check if a valid file was provided in a `multipart/form-data` request, or if required headers are missing. |
+| **402** | Payment Required | Fulfill the x402 challenge and resubmit with the `x402-credential` header. |
+| **404** | Not Found | Returned by `/v1/jobs/:id` if the `jobId` does not exist. |
+| **413** | Payload Too Large | The file exceeds the maximum allowed size (`MAX_FILE_SIZE`). |
+| **429** | Too Many Requests | The free tier (`x-wallet-address`) limit of 3 calls/day has been reached. Use the paid x402 tier. |
+| **500** | Internal Error | The parser failed unexpectedly. |
+
 ## 🚀 Setup
 
 ### Local Development
