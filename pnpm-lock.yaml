@@ -10,10 +10,10 @@ importers:
     dependencies:
       '@hono/node-server':
         specifier: ^1.13.8
-        version: 1.19.17(hono@4.13.8)
+        version: 1.19.17(hono@4.13.13)
       '@hono/swagger-ui':
         specifier: ^0.6.1
-        version: 0.6.1(hono@4.13.8)
+        version: 0.6.1(hono@4.13.13)
       '@x402/avm':
         specifier: ^2.28.0
         version: 2.28.0
@@ -25,7 +25,7 @@ importers:
         version: 2.28.0(typescript@5.9.3)
       '@x402/hono':
         specifier: ^2.28.0
-        version: 2.28.0(hono@4.13.8)(typescript@5.9.3)
+        version: 2.28.0(hono@4.13.13)(typescript@5.9.3)
       algosdk:
         specifier: ^3.7.0
         version: 3.7.0
@@ -45,8 +45,8 @@ importers:
         specifier: ^4.0.1
         version: 4.0.6
       hono:
-        specifier: ^4.13.5
-        version: 4.13.8
+        specifier: ^4.13.13
+        version: 4.13.13
       mammoth:
         specifier: ^1.13.0
         version: 1.13.0
@@ -1254,8 +1254,8 @@ packages:
   hi-base32@0.5.1:
     resolution: {integrity: sha512-EmBBpvdYh/4XxsnUybsPag6VikPYnN30td+vQk+GI3qpahVEG9+gTkG0aXVxTjBqQ5T6ijbWIu77O+C5WFWsnA==}
 
-  hono@4.13.8:
-    resolution: {integrity: sha512-/Gng7NfoykZl2pjukW5Z6+8Yxm3BPRf86GTbQnt0SbySkvax4fyL4H3HhY1cCpBGmiW9XDRFzRV+CXK2W8QudQ==}
+  hono@4.13.13:
+    resolution: {integrity: sha512-CQ46U0ZkAGmbT/4UxdzzGJpacP2IeKgY4a5/tOI9AABbpOMfK739wfDXmv1usCk+3RkKj1hQy4/fjhiwa2xlrA==}
     engines: {node: '>=16.9.0'}
 
   html-escaper@2.0.2:
@@ -2305,13 +2305,13 @@ snapshots:
       lodash.isundefined: 3.0.1
       lodash.uniq: 4.5.0
 
-  '@hono/node-server@1.19.17(hono@4.13.8)':
+  '@hono/node-server@1.19.17(hono@4.13.13)':
     dependencies:
-      hono: 4.13.8
+      hono: 4.13.13
 
-  '@hono/swagger-ui@0.6.1(hono@4.13.8)':
+  '@hono/swagger-ui@0.6.1(hono@4.13.13)':
     dependencies:
-      hono: 4.13.8
+      hono: 4.13.13
 
   '@humanwhocodes/config-array@0.13.0(supports-color@7.2.0)':
     dependencies:
@@ -2743,11 +2743,11 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@x402/hono@2.28.0(hono@4.13.8)(typescript@5.9.3)':
+  '@x402/hono@2.28.0(hono@4.13.13)(typescript@5.9.3)':
     dependencies:
       '@x402/core': 2.28.0
       '@x402/extensions': 2.28.0(typescript@5.9.3)
-      hono: 4.13.8
+      hono: 4.13.13
     transitivePeerDependencies:
       - bufferutil
       - ethers
@@ -3344,7 +3344,7 @@ snapshots:
 
   hi-base32@0.5.1: {}
 
-  hono@4.13.8: {}
+  hono@4.13.13: {}
 
   html-escaper@2.0.2: {}
 
