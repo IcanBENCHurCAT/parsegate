@@ -145,18 +145,23 @@ All documents are normalized to a unified schema:
 ```typescript
 interface ParsedDocument {
   format: string;
-  source_pages_or_units: number;
-  tier_used: "deterministic" | "vlm_assisted" | "hybrid";
-  elements: Element[];
-  metadata: Record<string, string | number>;
+  tier: 'text' | 'structured' | 'scanned' | 'unknown';
+  estimatedPages: number;
+  needsOCR: boolean;
+  elements: ParsedElement[];
+  metadata: Record<string, string | number | boolean | string[]>;
+  provenance: {
+    detectedBy: 'magic-byte' | 'extension' | 'content-analysis';
+    normalizer: string;
+  };
 }
 
-type Element =
-  | { type: "heading"; level: number; text: string; location: Location }
-  | { type: "paragraph"; text: string; location: Location }
-  | { type: "table"; rows: string[][]; confidence: number; location: Location }
-  | { type: "image"; description?: string; location: Location }
-  | { type: "formula"; latex: string; confidence: number; location: Location };
+type ParsedElement =
+  | { type: 'heading'; level: number; text: string; confidence: number; tags?: string[] }
+  | { type: 'paragraph'; text: string; confidence: number; tags?: string[] }
+  | { type: 'table'; headers: string[]; rows: string[][]; colCount: number; rowCount: number; confidence: number; tags?: string[] }
+  | { type: 'image'; mimeType?: string; data?: string; alt?: string; width?: number; height?: number; confidence: number; tags?: string[] }
+  | { type: 'formula'; latex: string; alt?: string; confidence: number; tags?: string[] };
 ```
 
 ## 📝 License
