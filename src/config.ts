@@ -3,8 +3,9 @@ export const config = {
   // x402 payment config
   x402FacilitatorUrl: process.env.X402_FACILITATOR_URL || 'https://x402.org/facilitator',
   algorandNodeUrl: process.env.ALGORAND_NODE_URL || 'https://testnet-api.algonode.cloud',
+  algorandNetwork: process.env.ALGORAND_NETWORK || 'algo:testnet',
   // Algorand address for receiving USDC payments
-  avmPayToAddress: process.env.AVM_PAY_TO_ADDRESS || '',
+  avmPayToAddress: process.env.AVM_PAY_TO_ADDRESS || 'PARSEGATE_RECEIVER_WALLET',
   // Whether to require real x402 payments (false for dev/test)
   x402TestMode: process.env.X402_TEST_MODE === 'true',
   x402TestSecret: process.env.X402_TEST_SECRET || '',
