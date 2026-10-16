@@ -87,7 +87,7 @@ export function buildTestCredential(
     version: 1,
     amount: price.amount.toFixed(6),
     scheme: 'exact',
-    network: 'algo:testnet',
+    network: config.algorandNetwork,
     secret: TEST_SECRET,
     priceHash: price.priceHash,
     description: `Parsegate ${triage.format} processing`,
@@ -161,10 +161,10 @@ export function buildChallenge(
     accepts: [
       {
         scheme: 'exact',
-        network: 'algo:testnet',
+        network: config.algorandNetwork,
         asset: 'USDC',
         amount: price.amount.toFixed(6),
-        payTo: 'PARSEGATE_RECEIVER_WALLET',
+        payTo: config.avmPayToAddress,
         maxTimeoutSeconds: 3600,
         extra: {
           tier: triage.tier,
@@ -221,10 +221,10 @@ export function x402Middleware() {
           accepts: [
             {
               scheme: 'exact',
-              network: 'algo:testnet',
+              network: config.algorandNetwork,
               asset: 'USDC',
               amount: (pricingTable.tiers.unknown.floorPrice ?? 0).toFixed(6),
-              payTo: 'PARSEGATE_RECEIVER_WALLET',
+              payTo: config.avmPayToAddress,
               maxTimeoutSeconds: 3600,
             },
           ],
@@ -252,9 +252,9 @@ export function x402Middleware() {
 export const x402RouteConfig = {
   accepts: {
     scheme: 'exact',
-    payTo: 'PARSEGATE_RECEIVER_WALLET',
+    payTo: config.avmPayToAddress,
     price: 0.005, // Base price; actual price computed per-request via triage
-    network: 'algo:testnet' as const,
+    network: config.algorandNetwork,
     maxTimeoutSeconds: 3600,
   },
   description: 'Document-to-structured-data parsing endpoint',
