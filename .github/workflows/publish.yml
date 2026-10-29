@@ -36,6 +36,9 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+      - name: Type check
+        run: pnpm exec tsc --noEmit
+
       - name: Build project
         run: pnpm run --if-present build
 
