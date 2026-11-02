@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-Parsegate successfully extracts structured tables from **native tabular formats** (CSV/TSV) with 100% fidelity. Table structure is **not yet preserved** in Markdown or PDF text-layer formats — these degrade to paragraph elements. For scanned PDFs, table reconstruction quality depends on OCR alignment: well-aligned OCR produces tables at ~100% fidelity via Qwen3; poorly aligned OCR degrades to paragraphs.
+Parsegate successfully extracts structured tables from **native tabular formats** (CSV/TSV) and **Markdown (GFM)** with 100% fidelity. Table structure is **not yet preserved** in PDF text-layer formats — these degrade to paragraph elements. For scanned PDFs, table reconstruction quality depends on OCR alignment: well-aligned OCR produces tables at ~100% fidelity via Qwen3; poorly aligned OCR degrades to paragraphs.
 
 **Recommendation:** Ship v0 as-is. For scanned-doc table fidelity, offer a paid upgrade to **Google Document AI Layout Parser** at $0.01/page as a separate tier.
 
@@ -123,7 +123,7 @@ Expected: 2 tables | Extracted: 0 | Fidelity: 0.00
 
 - Scanned PDFs with poor alignment → tables become paragraphs
 - Document content is still extracted (no data loss, just structural degradation)
-- Markdown tables → paragraphs (same issue, but GFM is a smaller use case)
+- Markdown tables are natively supported (GFM), leaving only PDF and scanned docs as edge cases
 - Cost advantage maintained: $0.0025/page vs. $0.01/page for Document AI
 
 **Verdict: ACCEPTABLE for v0.** The primary use case (text-layer PDFs, CSV) works perfectly. Scanned doc degradation is a known limitation that improves over time as Qwen3's table understanding improves.
