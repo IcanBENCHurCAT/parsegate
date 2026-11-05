@@ -10,6 +10,10 @@
 // Types
 // ─────────────────────────────────────────────────────────────────
 
+import type { TriageResult } from './detector.js';
+import type { ParsedDocument } from './schema.js';
+import type { ComputedPrice, SettlementReceipt } from './pricing.js';
+
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
 export interface JobError {
@@ -18,9 +22,13 @@ export interface JobError {
 }
 
 export interface JobResult {
-  triage: unknown;
-  document: unknown;
-  payment: unknown;
+  triage: TriageResult;
+  document: ParsedDocument;
+  payment: {
+    status: 'paid';
+    price: ComputedPrice;
+    receipt: SettlementReceipt;
+  };
 }
 
 /** A single async parse job. */
