@@ -88,7 +88,7 @@ const normalizeMarkdown: NormalizerFn = (buffer, triage) => {
 
   let currentParagraph: string[] = [];
   let currentTableLines: string[] = [];
-  let inCodeFence = false;
+  let codeFence: string | null = null;
 
   const flushParagraph = () => {
     if (currentParagraph.length === 0) return;
@@ -166,14 +166,25 @@ const normalizeMarkdown: NormalizerFn = (buffer, triage) => {
   };
 
   for (const line of lines) {
-    // Track fenced code blocks so pipe rows inside them are not parsed
-    // as tables.
-    if (/^\s*(```|~~~)/.test(line)) {
-      inCodeFence = !inCodeFence;
+    // CommonMark 4.5: a closing fence uses the opening marker, is at
+    // least as long, and has only spaces/tabs after it (up to 3 before).
+    const fenceMatch = line.match(/^ {0,3}(`{3,}|~{3,})([^\r\n]*)$/);
+    if (codeFence !== null) {
+      if (
+        fenceMatch &&
+        fenceMatch[1][0] === codeFence[0] &&
+        fenceMatch[1].length >= codeFence.length &&
+        /^[ \t]*$/.test(fenceMatch[2])
+      ) {
+        codeFence = null;
+      }
       currentParagraph.push(line);
       continue;
     }
-    if (inCodeFence) {
+    // A backtick opener cannot contain backticks in its info string.
+    if (fenceMatch && (fenceMatch[1][0] === '~' || !fenceMatch[2].includes('`'))) {
+      flushTable();
+      codeFence = fenceMatch[1];
       currentParagraph.push(line);
       continue;
     }
