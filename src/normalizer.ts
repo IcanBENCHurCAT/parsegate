@@ -106,7 +106,7 @@ const normalizeMarkdown: NormalizerFn = (buffer, triage) => {
   // Split a GFM table row into trimmed cells. Strips the optional outer
   // pipes and honors escaped pipes (\|) inside cells.
   const splitTableRow = (line: string): string[] => {
-    const trimmed = line.trim().replace(/^\|/, '').replace(/\|$/, '');
+    const trimmed = line.trim().replace(/^\|/, '').replace(/(?<!\\)\|$/, '');
     const cells: string[] = [];
     let current = '';
     for (let i = 0; i < trimmed.length; i++) {
