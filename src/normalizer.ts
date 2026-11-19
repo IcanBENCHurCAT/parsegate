@@ -261,17 +261,62 @@ const normalizeCSV: NormalizerFn = (buffer, triage) => {
 
   // Detect delimiter
   let delimiter = ',';
+  // Quoted header text must not influence delimiter detection.
   const firstLine = csvLines[0] ?? '';
-  if (firstLine.includes('\t')) {
+  const headerDelimiters = new Set<string>();
+  let inHeaderQuotes = false;
+  for (let i = 0; i < firstLine.length; i++) {
+    const ch = firstLine[i];
+    if (ch === '"') {
+      if (inHeaderQuotes && firstLine[i + 1] === '"') {
+        i++;
+      } else {
+        inHeaderQuotes = !inHeaderQuotes;
+      }
+    } else if (!inHeaderQuotes && (ch === ',' || ch === ';' || ch === '\t')) {
+      headerDelimiters.add(ch);
+    }
+  }
+  if (headerDelimiters.has('\t')) {
     delimiter = '\t';
-  } else if (firstLine.includes(';') && !firstLine.includes(',')) {
+  } else if (headerDelimiters.has(';') && !headerDelimiters.has(',')) {
     delimiter = ';';
   }
 
   // Parse all rows
   const rows: string[][] = csvLines.map((line) => {
-    // Simple CSV parsing (no quoted fields with embedded newlines for MVP)
-    return line.split(delimiter).map((cell) => cell.trim());
+    // Records still occupy one line; quoted embedded newlines are not supported.
+    const cells: string[] = [];
+    let cell = '';
+    let inQuotes = false;
+    let quotedCell = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (line[i + 1] === '"') {
+            cell += '"';
+            i++;
+          } else {
+            inQuotes = false;
+          }
+        } else {
+          cell += ch;
+        }
+      } else if (ch === delimiter) {
+        cells.push(quotedCell ? cell : cell.trim());
+        cell = '';
+        quotedCell = false;
+      } else if (ch === '"' && !quotedCell && cell.trim().length === 0) {
+        cell = '';
+        inQuotes = true;
+        quotedCell = true;
+      } else if (!quotedCell || ch.trim().length > 0) {
+        cell += ch;
+      }
+    }
+    cells.push(quotedCell ? cell : cell.trim());
+    return cells;
   });
 
   if (rows.length === 0) return doc;

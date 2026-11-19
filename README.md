@@ -138,6 +138,12 @@ The `/v1/parse/async` endpoint allows you to submit documents for asynchronous p
 - **Validation:** Zod
 - **Runtime:** Node.js 20+
 
+### Delimited Text
+
+CSV and TSV inputs use the first row as table headers. Single-line fields may be double-quoted to include delimiters; doubled quotes inside a quoted field become one literal quote. Delimiter detection ignores quoted header text and retains the comma, tab, and semicolon heuristics. Spaces inside quoted fields are preserved; unquoted fields are trimmed.
+
+The MVP parser does not support fields containing embedded line breaks. This is not a claim of full [RFC 4180](https://www.rfc-editor.org/rfc/rfc4180.html) conformance.
+
 ## 📄 Output Schema
 
 All documents are normalized to a unified schema:
