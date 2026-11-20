@@ -11,7 +11,7 @@
  *  - Error handling (missing file, invalid params, etc.)
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { app } from '../src/index.js';
 import { jobStore } from '../src/jobs.js';
 import { rateLimiter } from '../src/rate-limit.js';
@@ -340,6 +340,10 @@ describe('Job Store', () => {
 // ── Rate Limiter ─────────────────────────────────────────────────
 
 describe('Rate Limiter', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('allows first 3 calls per wallet per day', () => {
     const wallet = 'rate_test_wallet';
     expect(rateLimiter.allow(wallet)).toBe(true);
@@ -364,5 +368,133 @@ describe('Rate Limiter', () => {
     expect(rateLimiter.remaining(wallet)).toBe(1);
     rateLimiter.allow(wallet);
     expect(rateLimiter.remaining(wallet)).toBe(0);
+  });
+
+  it('uses UTC day boundaries and aligns bucket rollover with X-RateLimit-Reset', () => {
+    vi.useFakeTimers();
+    // 01:30 UTC on 2026-11-20 (previous calendar day in negative-offset local timezones)
+    vi.setSystemTime(new Date('2026-11-20T01:30:00.000Z'));
+
+    const wallet = 'utc_boundary_wallet';
+    expect(rateLimiter.allow(wallet)).toBe(true);
+    expect(rateLimiter.allow(wallet)).toBe(true);
+    expect(rateLimiter.allow(wallet)).toBe(true);
+    expect(rateLimiter.allow(wallet)).toBe(false);
+    expect(rateLimiter.remaining(wallet)).toBe(0);
+    expect(rateLimiter['entries'].has(`${wallet}:2026-11-20`)).toBe(true);
+
+    const headers = rateLimiter.headers(wallet);
+    const resetMs = Number(headers['X-RateLimit-Reset']) * 1000;
+    expect(resetMs).toBe(Date.UTC(2026, 10, 21, 0, 0, 0, 0));
+
+    // Still on 2026-11-20 UTC 1ms before midnight
+    vi.setSystemTime(new Date(resetMs - 1));
+    expect(rateLimiter.allow(wallet)).toBe(false);
+    expect(rateLimiter.remaining(wallet)).toBe(0);
+
+    // At exact X-RateLimit-Reset timestamp (2026-11-21T00:00:00Z), bucket rolls over
+    vi.setSystemTime(new Date(resetMs));
+    expect(rateLimiter.remaining(wallet)).toBe(3);
+    expect(rateLimiter.allow(wallet)).toBe(true);
+    expect(rateLimiter.remaining(wallet)).toBe(2);
+    expect(rateLimiter['entries'].has(`${wallet}:2026-11-21`)).toBe(true);
+  });
+
+  it('returns X-RateLimit headers matching remaining quota and next UTC midnight', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-11-20T23:59:59.000Z'));
+
+    const wallet = 'headers_wallet';
+    const expectedReset = String(Math.floor(Date.UTC(2026, 10, 21, 0, 0, 0, 0) / 1000));
+
+    expect(rateLimiter.headers(wallet)).toEqual({
+      'X-RateLimit-Limit': '3',
+      'X-RateLimit-Remaining': '3',
+      'X-RateLimit-Reset': expectedReset,
+    });
+
+    rateLimiter.allow(wallet);
+    rateLimiter.allow(wallet);
+
+    expect(rateLimiter.headers(wallet)).toEqual({
+      'X-RateLimit-Limit': '3',
+      'X-RateLimit-Remaining': '1',
+      'X-RateLimit-Reset': expectedReset,
+    });
+
+    rateLimiter.allow(wallet);
+
+    expect(rateLimiter.headers(wallet)).toEqual({
+      'X-RateLimit-Limit': '3',
+      'X-RateLimit-Remaining': '0',
+      'X-RateLimit-Reset': expectedReset,
+    });
+  });
+
+  it('clears all entries and restores remaining quota via clear()', () => {
+    const walletA = 'clear_wallet_a';
+    const walletB = 'clear_wallet_b';
+
+    rateLimiter.allow(walletA);
+    rateLimiter.allow(walletA);
+    rateLimiter.allow(walletA);
+    rateLimiter.allow(walletB);
+
+    expect(rateLimiter.size).toBe(2);
+    expect(rateLimiter.remaining(walletA)).toBe(0);
+    expect(rateLimiter.remaining(walletB)).toBe(2);
+
+    rateLimiter.clear();
+
+    expect(rateLimiter.size).toBe(0);
+    expect(rateLimiter.remaining(walletA)).toBe(3);
+    expect(rateLimiter.remaining(walletB)).toBe(3);
+    expect(rateLimiter.allow(walletA)).toBe(true);
+  });
+
+  it('cleanup() removes stale entries (>= 1 day old) and preserves today entries including colon wallets', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-11-19T12:00:00.000Z'));
+
+    const plainWallet = '0xabc';
+    const didWallet = 'did:ethr:0x123';
+    const caipWallet = 'eip155:8453:0x456';
+
+    rateLimiter.allow(plainWallet);
+    rateLimiter.allow(didWallet);
+    rateLimiter.allow(caipWallet);
+
+    // Move to next UTC day (01:30Z)
+    vi.setSystemTime(new Date('2026-11-20T01:30:00.000Z'));
+    rateLimiter.allow(didWallet);
+    rateLimiter.allow('0xtoday');
+
+    // Seed an older 2-day stale colon-wallet entry and a malformed key segment
+    rateLimiter['entries'].set('eip155:1:0xold:2026-11-18', {
+      wallet: 'eip155:1:0xold',
+      date: '2026-11-18',
+      count: 2,
+      limit: 3,
+    });
+    rateLimiter['entries'].set('did:ethr:0xmalformed:1999', {
+      wallet: 'did:ethr:0xmalformed',
+      date: '1999',
+      count: 1,
+      limit: 3,
+    });
+
+    const cleaned = rateLimiter.cleanup();
+
+    expect(cleaned).toBe(4);
+    expect(rateLimiter.size).toBe(3);
+    expect(rateLimiter['entries'].has(`${didWallet}:2026-11-20`)).toBe(true);
+    expect(rateLimiter['entries'].has('0xtoday:2026-11-20')).toBe(true);
+    expect(rateLimiter['entries'].has('did:ethr:0xmalformed:1999')).toBe(true);
+    expect(rateLimiter['entries'].has(`${plainWallet}:2026-11-19`)).toBe(false);
+    expect(rateLimiter['entries'].has(`${didWallet}:2026-11-19`)).toBe(false);
+    expect(rateLimiter['entries'].has(`${caipWallet}:2026-11-19`)).toBe(false);
+    expect(rateLimiter['entries'].has('eip155:1:0xold:2026-11-18')).toBe(false);
+    expect(rateLimiter.remaining(didWallet)).toBe(2);
+    expect(rateLimiter.remaining(caipWallet)).toBe(3);
   });
 });

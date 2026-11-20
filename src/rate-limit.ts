@@ -25,10 +25,10 @@ class FreeTierRateLimiter {
     this.defaultLimit = defaultLimit;
   }
 
-  /** Get the current date string. */
+  /** Get the current UTC date string (YYYY-MM-DD). */
   private today(): string {
     const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
   }
 
   /** Check if a wallet has remaining free tier calls. */
@@ -94,19 +94,20 @@ class FreeTierRateLimiter {
     this.entries.clear();
   }
 
-  /** Clean up stale entries (older than 2 days). */
+  /** Clean up stale entries (1 or more days old). */
   cleanup(): number {
     const todayStr = this.today();
+    const todayMs = Date.parse(todayStr);
     let cleaned = 0;
     for (const [key] of this.entries.entries()) {
-      // Parse date from key (wallet:YYYY-MM-DD)
+      // Parse date from key (wallet:YYYY-MM-DD); wallets may contain ':'
       const datePart = key.split(':').pop();
-      if (!datePart) continue;
+      if (!datePart || !/^\d{4}-\d{2}-\d{2}$/.test(datePart)) continue;
       if (datePart < todayStr) {
-        // More than 1 day old
-        const daysDiff = Math.floor(
-          (new Date(todayStr).getTime() - new Date(datePart).getTime()) / 86400000
-        );
+        const entryMs = Date.parse(datePart);
+        if (!Number.isFinite(entryMs)) continue;
+        // 1 or more days old
+        const daysDiff = Math.floor((todayMs - entryMs) / 86400000);
         if (daysDiff >= 1) {
           this.entries.delete(key);
           cleaned++;
