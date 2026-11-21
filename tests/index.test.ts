@@ -16,7 +16,7 @@ import { describe, it, expect } from 'vitest';
 import { app } from '../src/index.js';
 import { computePrice } from '../src/pricing.js';
 import { detectFormat } from '../src/detector.js';
-import { buildTestCredential } from '../src/payment.js';
+import { buildTestCredential, validateCredential } from '../src/payment.js';
 
 // ── Helper: build a minimal app matching src/index.ts ────────────
 
@@ -444,17 +444,53 @@ describe('POST /v1/parse — x402 payment flow', () => {
   it('returns 402 when invalid credential is provided', async () => {
     const fd = new FormData();
     fd.append('file', makeBlob('test', 't.txt'));
-    fd.append('x402-credential', 'invalid_credential_string');
 
     const res = await app.request('/v1/parse', {
       method: 'POST',
       body: fd,
+      headers: {
+        'x402-credential': 'invalid_credential_string',
+      },
     });
 
     // Invalid credential → 402 (middleware returns challenge for non-test_ credentials)
     expect(res.status).toBe(402);
     const data = await res.json();
     expect(data.x402Version).toBe(1);
+  });
+
+  it('returns 402 (never 500) for malformed test_ credentials', async () => {
+    const encodeTestCred = (payload: unknown): string =>
+      `test_${Buffer.from(JSON.stringify(payload)).toString('base64url')}`;
+
+    const malformedCredentials = [
+      'test_bnVsbA', // base64url("null") -> null
+      encodeTestCred({}), // missing required fields
+      encodeTestCred({ amount: '0.001' }), // missing network/scheme/secret
+      encodeTestCred({ amount: '0.002000' }), // matching price, missing network/scheme/secret
+      encodeTestCred([]), // JSON array
+      encodeTestCred(123), // JSON number primitive
+      encodeTestCred('string-payload'), // JSON string primitive
+      encodeTestCred(true), // JSON boolean primitive
+      encodeTestCred({ amount: 0.002, network: 123, scheme: 'exact', secret: 'test' }), // non-string fields
+    ];
+
+    for (const credential of malformedCredentials) {
+      const fd = new FormData();
+      fd.append('file', makeBlob('test', 't.txt'));
+
+      const res = await app.request('/v1/parse', {
+        method: 'POST',
+        body: fd,
+        headers: {
+          'x402-credential': credential,
+        },
+      });
+
+      expect(res.status).toBe(402);
+      const data = await res.json();
+      expect(data.x402Version).toBe(1);
+    }
   });
 
   it('returns 200 with valid test credential (full flow)', async () => {
@@ -632,5 +668,68 @@ describe('Error handling', () => {
 
     // Should not crash the server (200 or 500, but no unhandled exception)
     expect([200, 500]).toContain(res.status);
+  });
+});
+
+describe('validateCredential', () => {
+  const triage = detectFormat(Buffer.from('test'), 't.txt');
+  const price = computePrice(triage);
+
+  const encodeTestCred = (payload: unknown): string =>
+    `test_${Buffer.from(JSON.stringify(payload)).toString('base64url')}`;
+
+  it('accepts a valid test credential', () => {
+    const credential = buildTestCredential(price, triage);
+    const result = validateCredential(credential, price);
+    expect(result).not.toBeNull();
+    expect(result?.amount).toBe(price.amount.toFixed(6));
+    expect(result?.scheme).toBe('exact');
+  });
+
+  it('returns null for non-test_ or invalid JSON credentials', () => {
+    expect(validateCredential('invalid_credential_string', price)).toBeNull();
+    expect(validateCredential('test_not-valid-json!!!', price)).toBeNull();
+  });
+
+  it('returns null for malformed JSON payload shapes without throwing', () => {
+    const cases: string[] = [
+      'test_bnVsbA', // null
+      encodeTestCred({}),
+      encodeTestCred({ amount: '0.001' }),
+      encodeTestCred({ amount: price.amount.toFixed(6) }),
+      encodeTestCred([]),
+      encodeTestCred(['a', 'b']),
+      encodeTestCred(42),
+      encodeTestCred('hello'),
+      encodeTestCred(false),
+      encodeTestCred({
+        amount: price.amount,
+        network: 'algo:testnet',
+        scheme: 'exact',
+        secret: 'parsegate_test_secret_dev',
+      }),
+      encodeTestCred({
+        amount: price.amount.toFixed(6),
+        network: 12345,
+        scheme: 'exact',
+        secret: 'parsegate_test_secret_dev',
+      }),
+      encodeTestCred({
+        amount: price.amount.toFixed(6),
+        network: 'algo:testnet',
+        scheme: null,
+        secret: 'parsegate_test_secret_dev',
+      }),
+      encodeTestCred({
+        amount: price.amount.toFixed(6),
+        network: 'algo:testnet',
+        scheme: 'exact',
+        secret: { nested: true },
+      }),
+    ];
+
+    for (const credential of cases) {
+      expect(validateCredential(credential, price)).toBeNull();
+    }
   });
 });
