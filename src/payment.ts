@@ -115,30 +115,53 @@ export function validateCredential(
   }
 
   const encoded = credential.slice(5);
-  let parsed: ParsedCredential;
+  let parsed: unknown;
   try {
-    parsed = JSON.parse(Buffer.from(encoded, 'base64url').toString('utf-8'));
+    parsed = JSON.parse(Buffer.from(encoded, 'base64url').toString('utf-8')) as unknown;
   } catch {
     return null;
   }
 
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return null;
+  }
+
+  const candidate = parsed as Record<string, unknown>;
+  const { amount, network, scheme, secret, version, priceHash, description } = candidate;
+  if (
+    typeof amount !== 'string' ||
+    typeof network !== 'string' ||
+    typeof scheme !== 'string' ||
+    typeof secret !== 'string'
+  ) {
+    return null;
+  }
+
   // Verify amount matches quoted price (within floating-point tolerance)
-  const quotedNumeric = parseFloat(parsed.amount);
+  const quotedNumeric = parseFloat(amount);
   if (isNaN(quotedNumeric) || Math.abs(quotedNumeric - price.amount) > 0.000001) {
     return null;
   }
 
   // Verify scheme and network
-  if (parsed.scheme !== 'exact' || !parsed.network.startsWith('algo:')) {
+  if (scheme !== 'exact' || !network.startsWith('algo:')) {
     return null;
   }
 
   // Verify the secret
-  if (parsed.secret !== TEST_SECRET) {
+  if (secret !== TEST_SECRET) {
     return null;
   }
 
-  return parsed;
+  return {
+    version: typeof version === 'number' ? version : 1,
+    amount,
+    scheme,
+    network,
+    secret,
+    ...(typeof priceHash === 'string' ? { priceHash } : {}),
+    ...(typeof description === 'string' ? { description } : {}),
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────
