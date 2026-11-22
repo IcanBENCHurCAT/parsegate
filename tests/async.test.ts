@@ -15,6 +15,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { app } from '../src/index.js';
 import { jobStore } from '../src/jobs.js';
 import { rateLimiter } from '../src/rate-limit.js';
+import { buildTestCredential } from '../src/payment.js';
+import { detectFormat } from '../src/detector.js';
+import { computePrice } from '../src/pricing.js';
 
 // ── Helpers ──────────────────────────────────────────────────────
 
@@ -60,15 +63,16 @@ describe('POST /v1/parse/async', () => {
   });
 
   it('accepts x402-credential and creates a job (test mode)', async () => {
-    const file = makeFilePart('file', 'test content', 'test.txt');
+    const content = 'test content';
+    const fileName = 'test.txt';
+    const file = makeFilePart('file', content, fileName);
     const formData = new FormData();
     formData.append('file', file);
 
-    // Use test-mode credential
-    const credential = Buffer.from(JSON.stringify({
-      version: 1,
-      price: 0,
-    })).toString('base64');
+    // Use test-mode credential matching the quoted price
+    const triage = detectFormat(Buffer.from(content), fileName);
+    const price = computePrice(triage);
+    const credential = buildTestCredential(price, triage);
 
     const res = await app.request('/v1/parse/async', {
       method: 'POST',
@@ -82,6 +86,83 @@ describe('POST /v1/parse/async', () => {
     expect(body.status).toBe('completed');
     expect(body.triage).toBeDefined();
     expect(body.triage.format).toBe('txt');
+    expect(body.payment.price.amount).toBe(price.amount);
+  });
+
+  it('returns 402 with challenge and creates no job for invalid x402-credential', async () => {
+    const legacyCredential = Buffer.from(JSON.stringify({
+      version: 1,
+      price: 0,
+    })).toString('base64');
+
+    for (const credential of ['fake', legacyCredential]) {
+      const file = makeFilePart('file', 'test content', 'test.txt');
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await app.request('/v1/parse/async', {
+        method: 'POST',
+        body: formData,
+        headers: { 'x402-credential': credential },
+      });
+
+      expect(res.status).toBe(402);
+      const body = await res.json() as { x402Version: number; accepts: unknown[] };
+      expect(body.x402Version).toBe(1);
+      expect(Array.isArray(body.accepts)).toBe(true);
+      expect(body.accepts.length).toBeGreaterThan(0);
+      expect(jobStore.stats().total).toBe(0);
+    }
+  });
+
+  it('returns 402 and creates no job for underpaid test_ credential', async () => {
+    const content = 'test content';
+    const fileName = 'test.txt';
+    const file = makeFilePart('file', content, fileName);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const triage = detectFormat(Buffer.from(content), fileName);
+    const price = computePrice(triage);
+    const underpaidCredential = buildTestCredential(
+      { ...price, amount: 0.000001 },
+      triage,
+    );
+
+    const res = await app.request('/v1/parse/async', {
+      method: 'POST',
+      body: formData,
+      headers: { 'x402-credential': underpaidCredential },
+    });
+
+    expect(res.status).toBe(402);
+    const body = await res.json() as { x402Version: number; accepts: unknown[] };
+    expect(body.x402Version).toBe(1);
+    expect(Array.isArray(body.accepts)).toBe(true);
+    expect(jobStore.stats().total).toBe(0);
+  });
+
+  it('returns 402 when invalid x402-credential is paired with x-wallet-address (no free-tier bypass)', async () => {
+    const file = makeFilePart('file', 'test content', 'test.txt');
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const wallet = 'bypass_attempt_wallet';
+    const res = await app.request('/v1/parse/async', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'x402-credential': 'fake',
+        'x-wallet-address': wallet,
+      },
+    });
+
+    expect(res.status).toBe(402);
+    const body = await res.json() as { x402Version: number; accepts: unknown[] };
+    expect(body.x402Version).toBe(1);
+    expect(Array.isArray(body.accepts)).toBe(true);
+    expect(jobStore.stats().total).toBe(0);
+    expect(rateLimiter.remaining(wallet)).toBe(3);
   });
 
   it('accepts x-wallet-address for free tier', async () => {

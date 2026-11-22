@@ -109,8 +109,17 @@ app.post('/v1/parse/async', async (c) => {
       return c.json({ error: 'Provide x402-credential (paid) or x-wallet-address (free tier)' }, 400);
     }
 
-    // Free tier: rate limit (3 calls/day per wallet)
-    if (!credential && wallet) {
+    // Compute price (for x402 settlement at submission time)
+    const triage = detectFormat(buffer, fileName);
+    const price = computePrice(triage);
+
+    // Paid path: validate x402-credential before free-tier fallback or job creation
+    if (credential) {
+      if (!validateCredential(credential, price)) {
+        return c.json(buildChallenge(triage, price), 402);
+      }
+    } else if (wallet) {
+      // Free tier: rate limit (3 calls/day per wallet)
       const allowed = rateLimiter.allow(wallet);
       if (!allowed) {
         const headers = rateLimiter.headers(wallet);
@@ -126,10 +135,6 @@ app.post('/v1/parse/async', async (c) => {
         c.header(key, value);
       }
     }
-
-    // Compute price (for x402 settlement at submission time)
-    const triage = detectFormat(buffer, fileName);
-    const price = computePrice(triage);
 
     // If no x402 credential and using free tier: set price to 0 (free tier)
     const effectivePrice = credential ? price : { ...price, amount: 0, currency: 'USDC' };
